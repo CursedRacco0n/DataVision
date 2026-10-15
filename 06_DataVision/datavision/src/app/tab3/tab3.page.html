@@ -1,0 +1,221 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Nuevo Registro de Indicador</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-card class="form-card">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="add-circle-outline" color="primary"></ion-icon>
+        Captura de Indicadores
+      </ion-card-title>
+      <ion-card-subtitle>Ingresa los datos para alimentar el dashboard en tiempo real</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <!-- Fecha de Medición -->
+      <div class="input-group">
+        <ion-label class="custom-label">
+          <ion-icon name="calendar-outline"></ion-icon> Fecha
+        </ion-label>
+        <ion-item lines="none" class="custom-item">
+          <ion-input
+            type="date"
+            [(ngModel)]="fecha"
+            required
+            aria-label="Fecha"
+          ></ion-input>
+        </ion-item>
+      </div>
+
+      <!-- Materia / Grupo -->
+      <div class="input-group">
+        <ion-label class="custom-label">
+          <ion-icon name="school-outline"></ion-icon> Materia / Grupo
+        </ion-label>
+        <ion-item lines="none" class="custom-item">
+          <ion-select
+            [(ngModel)]="grupo"
+            interface="action-sheet"
+            placeholder="Selecciona materia"
+            aria-label="Materia o Grupo"
+          >
+            <ion-select-option value="Maths">Maths</ion-select-option>
+            <ion-select-option value="English">English</ion-select-option>
+            <ion-select-option value="Physics">Physics</ion-select-option>
+            <ion-select-option value="Chemistry">Chemistry</ion-select-option>
+            <ion-select-option value="Biology">Biology</ion-select-option>
+            <ion-select-option value="2A">Grupo 2A</ion-select-option>
+            <ion-select-option value="2B">Grupo 2B</ion-select-option>
+            <ion-select-option value="2C">Grupo 2C</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <!-- Inscritos y Presentes -->
+      <ion-grid class="ion-no-padding">
+        <ion-row>
+          <ion-col size="6" class="col-padding-right">
+            <div class="input-group">
+              <ion-label class="custom-label">
+                <ion-icon name="people-outline"></ion-icon> Inscritos
+              </ion-label>
+              <ion-item lines="none" class="custom-item">
+                <ion-input
+                  type="number"
+                  min="1"
+                  [(ngModel)]="inscritos"
+                  placeholder="30"
+                  aria-label="Inscritos"
+                ></ion-input>
+              </ion-item>
+            </div>
+          </ion-col>
+
+          <ion-col size="6" class="col-padding-left">
+            <div class="input-group">
+              <ion-label class="custom-label">
+                <ion-icon name="people-outline"></ion-icon> Presentes
+              </ion-label>
+              <ion-item
+                lines="none"
+                class="custom-item"
+                [class.item-error]="presentes > inscritos"
+              >
+                <ion-input
+                  type="number"
+                  min="0"
+                  [max]="inscritos"
+                  [(ngModel)]="presentes"
+                  placeholder="27"
+                  aria-label="Presentes"
+                ></ion-input>
+              </ion-item>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <ion-note *ngIf="presentes > inscritos" color="danger" class="error-note">
+        Alumnos presentes ({{ presentes }}) no puede superar a los inscritos ({{ inscritos }}).
+      </ion-note>
+
+      <!-- Promedio con ion-range interactivo -->
+      <div class="input-group">
+        <div class="range-header">
+          <ion-label class="custom-label">
+            <ion-icon name="ribbon-outline"></ion-icon> Promedio de Calificación
+          </ion-label>
+          <span class="range-value-pill">{{ promedio }} / 100</span>
+        </div>
+        <ion-range
+          [(ngModel)]="promedio"
+          [min]="0"
+          [max]="100"
+          [step]="0.5"
+          [pin]="true"
+          color="tertiary"
+          aria-label="Promedio de Calificación"
+        >
+          <ion-label slot="start" class="range-edge">0</ion-label>
+          <ion-label slot="end" class="range-edge">100</ion-label>
+        </ion-range>
+      </div>
+
+      <!-- Actividades Programadas y Entregadas -->
+      <ion-grid class="ion-no-padding">
+        <ion-row>
+          <ion-col size="6" class="col-padding-right">
+            <div class="input-group">
+              <ion-label class="custom-label">
+                <ion-icon name="checkbox-outline"></ion-icon> Programadas
+              </ion-label>
+              <ion-item lines="none" class="custom-item">
+                <ion-input
+                  type="number"
+                  min="0"
+                  [(ngModel)]="actividadesProgramadas"
+                  placeholder="30"
+                  aria-label="Actividades Programadas"
+                ></ion-input>
+              </ion-item>
+            </div>
+          </ion-col>
+
+          <ion-col size="6" class="col-padding-left">
+            <div class="input-group">
+              <ion-label class="custom-label">
+                <ion-icon name="checkbox-outline"></ion-icon> Entregadas
+              </ion-label>
+              <ion-item
+                lines="none"
+                class="custom-item"
+                [class.item-error]="actividadesEntregadas > actividadesProgramadas"
+              >
+                <ion-input
+                  type="number"
+                  min="0"
+                  [max]="actividadesProgramadas"
+                  [(ngModel)]="actividadesEntregadas"
+                  placeholder="26"
+                  aria-label="Actividades Entregadas"
+                ></ion-input>
+              </ion-item>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <!-- Indicadores Calculados en Tiempo Real -->
+      <div class="calculated-indicators">
+        <div class="indicator-tag">
+          <span class="tag-title">Asistencia Calculada:</span>
+          <span class="badge-pill" [class.badge-teal]="porcentajeAsistencia >= 80" [class.badge-danger]="porcentajeAsistencia < 80">
+            {{ porcentajeAsistencia }}%
+          </span>
+        </div>
+        <div class="indicator-tag">
+          <span class="tag-title">Tasa de Entregas:</span>
+          <span class="badge-pill badge-purple">
+            {{ porcentajeEntregas }}%
+          </span>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="form-actions">
+        <ion-button
+          expand="block"
+          color="primary"
+          class="submit-button"
+          [disabled]="guardando || hayErrorValidacion"
+          (click)="guardarRegistro()"
+        >
+          <ion-spinner *ngIf="guardando" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!guardando" name="save-outline" slot="start"></ion-icon>
+          Guardar y Actualizar Gráficas
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="clear"
+          color="medium"
+          (click)="restablecerFormulario()"
+        >
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Limpiar Campos
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-toast
+    [isOpen]="mostrarToast"
+    [message]="toastMensaje"
+    [color]="toastColor"
+    [duration]="3500"
+    (didDismiss)="mostrarToast = false"
+  ></ion-toast>
+</ion-content>

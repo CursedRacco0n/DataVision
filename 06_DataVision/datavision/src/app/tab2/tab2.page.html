@@ -1,0 +1,152 @@
+
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Importar Indicadores CSV</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <!-- Tarjeta de Selección de Archivo -->
+  <ion-card class="upload-card">
+    <ion-card-content>
+      <input
+        type="file"
+        #fileInput
+        (change)="onFileSelected($event)"
+        accept=".csv,text/csv"
+        style="display: none"
+      />
+
+      <div class="drop-zone" (click)="fileInput.click()">
+        <div class="drop-zone-icon">
+          <ion-icon name="cloud-upload-outline"></ion-icon>
+        </div>
+        <h3>Selecciona tu archivo CSV</h3>
+        <p>Toca aquí para buscar en tu dispositivo (.csv)</p>
+        <span class="file-format-note">Encabezados requeridos: fecha, grupo, inscritos, presentes, promedio...</span>
+      </div>
+
+      <div class="sample-actions">
+        <ion-button
+          fill="outline"
+          size="small"
+          color="primary"
+          (click)="cargarEjemploValido()"
+        >
+          <ion-icon name="flask-outline" slot="start"></ion-icon>
+          Cargar Ejemplo Válido
+        </ion-button>
+
+        <ion-button
+          fill="outline"
+          size="small"
+          color="danger"
+          (click)="cargarEjemploConErrores()"
+        >
+          <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+          Probar CSV con Errores
+        </ion-button>
+      </div>
+
+      <div *ngIf="nombreArchivo" class="file-badge-active">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <span>{{ nombreArchivo }}</span>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Resumen de Validación -->
+  <div *ngIf="filasValidas.length > 0 || filasConError.length > 0" class="validation-summary">
+    <div class="stat-pill valid">
+      <span class="pill-number">{{ filasValidas.length }}</span>
+      <span class="pill-text">Filas Válidas</span>
+    </div>
+
+    <div class="stat-pill error">
+      <span class="pill-number">{{ filasConError.length }}</span>
+      <span class="pill-text">Con Error</span>
+    </div>
+  </div>
+
+  <!-- Botón de Sincronización -->
+  <div *ngIf="filasValidas.length > 0" class="sync-action-container">
+    <ion-button
+      expand="block"
+      color="primary"
+      class="sync-button"
+      [disabled]="sincronizando"
+      (click)="sincronizarConMySQL()"
+    >
+      <ion-spinner *ngIf="sincronizando" name="crescent" slot="start"></ion-spinner>
+      <ion-icon *ngIf="!sincronizando" name="sync-outline" slot="start"></ion-icon>
+      Sincronizar {{ filasValidas.length }} Registros con MySQL
+    </ion-button>
+  </div>
+
+  <!-- Segmentos de Previsualización -->
+  <div *ngIf="filasValidas.length > 0 || filasConError.length > 0" class="preview-section">
+    <ion-segment [(ngModel)]="vistaSegmento" mode="ios">
+      <ion-segment-button value="validas">
+        <ion-label>Válidas ({{ filasValidas.length }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="errores">
+        <ion-label>Con Errores ({{ filasConError.length }})</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Lista de Filas Válidas -->
+    <ion-list *ngIf="vistaSegmento === 'validas'" class="preview-list">
+      <ion-item *ngFor="let item of filasValidas" lines="full" class="preview-item">
+        <ion-icon name="checkmark-circle-outline" color="success" slot="start"></ion-icon>
+        <div class="row-details">
+          <div class="row-top">
+            <span class="row-title">{{ item.grupo }} · {{ item.fecha }}</span>
+            <ion-badge color="primary">Promedio: {{ item.promedio }}</ion-badge>
+          </div>
+          <div class="row-meta">
+            <span>Asistencia: {{ item.presentes }}/{{ item.inscritos }} ({{ ((item.presentes / item.inscritos) * 100).toFixed(0) }}%)</span>
+            <span>Actividades: {{ item.actividadesEntregadas }}/{{ item.actividadesProgramadas }}</span>
+          </div>
+        </div>
+      </ion-item>
+    </ion-list>
+
+    <!-- Lista de Filas con Errores -->
+    <ion-list *ngIf="vistaSegmento === 'errores'" class="preview-list">
+      <ion-item *ngFor="let errRow of filasConError" lines="full" class="error-item">
+        <ion-icon name="alert-circle-outline" color="danger" slot="start"></ion-icon>
+        <div class="row-details">
+          <div class="row-top">
+            <span class="row-title error-title">Fila #{{ errRow.fila }}</span>
+            <ion-badge color="danger">{{ errRow.errores.length }} Error(es)</ion-badge>
+          </div>
+          <div class="error-messages">
+            <div *ngFor="let msg of errRow.errores" class="error-pill">
+              {{ msg }}
+            </div>
+          </div>
+          <ion-note class="raw-data-note">
+            Datos: {{ errRow.data | json }}
+          </ion-note>
+        </div>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- Toast y Alerta de Notificación -->
+  <ion-toast
+    [isOpen]="mostrarToast"
+    [message]="toastMensaje"
+    [color]="toastColor"
+    [duration]="3500"
+    (didDismiss)="mostrarToast = false"
+  ></ion-toast>
+
+  <ion-alert
+    [isOpen]="mostrarAlerta"
+    [header]="alertaTitulo"
+    [message]="alertaMensaje"
+    [buttons]="['Aceptar']"
+    (didDismiss)="mostrarAlerta = false"
+  ></ion-alert>
+</ion-content>

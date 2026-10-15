@@ -1,0 +1,164 @@
+.connection-card {
+  margin: 0 0 16px;
+
+  .header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .url-input-wrap {
+    margin: 10px 0 12px;
+
+    .url-item {
+      --background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
+  }
+
+  .connection-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    ion-button {
+      --border-radius: 10px;
+      font-weight: 600;
+    }
+  }
+}
+
+.search-section {
+  margin-bottom: 14px;
+
+  ion-searchbar {
+    --background: #ffffff;
+    --border-radius: 14px;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 0;
+    margin-bottom: 6px;
+  }
+
+  .origin-chips {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+
+    ion-chip {
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+  }
+}
+
+.records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 4px 6px;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+}
+
+.records-list {
+  background: transparent;
+  padding: 0;
+
+  .record-card {
+    margin: 8px 0;
+    border: 1px solid #e2e8f0 !important;
+
+    ion-card-content {
+      padding: 14px 16px;
+    }
+
+    .record-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+
+      .record-title-group {
+        display: flex;
+        flex-direction: column;
+
+        .record-subject {
+          font-size: 1.05rem;
+          font-weight: 800;
+          color: #0f172a;
+        }
+
+        .record-date {
+          font-size: 0.78rem;
+          color: #64748b;
+          font-weight: 500;
+        }
+      }
+
+      .record-badges {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        ion-button {
+          --padding-start: 4px;
+          --padding-end: 4px;
+          height: 28px;
+        }
+      }
+    }
+
+    .record-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 8px 12px;
+
+      .metric-item {
+        display: flex;
+        flex-direction: column;
+
+        .metric-label {
+          font-size: 0.68rem;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: #94a3b8;
+          letter-spacing: 0.03em;
+        }
+
+        .metric-val {
+          font-size: 0.95rem;
+          font-weight: 800;
+          color: #1e293b;
+          margin-top: 2px;
+
+          small {
+            font-size: 0.72rem;
+            color: #64748b;
+            font-weight: 600;
+          }
+
+          &.purple-text {
+            color: #8b5cf6;
+          }
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 16px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+}

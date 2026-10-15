@@ -1,0 +1,526 @@
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+  HostListener,
+  ChangeDetectorRef
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import {
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
+  IonSelect,
+  IonSelectOption,
+  IonIcon,
+  IonBadge,
+  IonProgressBar,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonRefresher,
+  IonRefresherContent
+} from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import {
+  calendarOutline,
+  schoolOutline,
+  peopleOutline,
+  ribbonOutline,
+  checkmarkCircleOutline,
+  refreshOutline,
+  pieChartOutline,
+  trendingUpOutline,
+  barChartOutline,
+  filterOutline
+} from 'ionicons/icons';
+import * as echarts from 'echarts';
+import { Subscription } from 'rxjs';
+import { DataService } from '../services/data.service';
+import { IndicadorAcademico, ResumenKpis } from '../models/indicador.model';
+
+@Component({
+  selector: 'app-tab1',
+  templateUrl: 'tab1.page.html',
+  styleUrls: ['tab1.page.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
+    IonSelect,
+    IonSelectOption,
+    IonIcon,
+    IonBadge,
+    IonProgressBar,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+    IonRefresher,
+    IonRefresherContent
+  ]
+})
+export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('barChartContainer') barChartElement!: ElementRef<HTMLDivElement>;
+  @ViewChild('pieChartContainer') pieChartElement!: ElementRef<HTMLDivElement>;
+  @ViewChild('lineChartContainer') lineChartElement!: ElementRef<HTMLDivElement>;
+
+  private barChart?: echarts.ECharts;
+  private pieChart?: echarts.ECharts;
+  private lineChart?: echarts.ECharts;
+
+  private subs = new Subscription();
+
+  // Filtros interactivos
+  filtroAnio: string = '2026';
+  filtroMes: string = 'todos';
+  filtroGrupo: string = 'todos';
+
+  // Modalidad de la gráfica de pastel (Materias vs Asistencia)
+  pieMode: 'materias' | 'asistencia' = 'materias';
+
+  // KPIs
+  kpis: ResumenKpis = {
+    totalRegistros: 0,
+    asistenciaPonderada: 0,
+    promedioGlobal: 0,
+    tasaEntregas: 0,
+    totalInscritos: 0,
+    totalPresentes: 0,
+    totalAusentes: 0
+  };
+
+  datosFiltrados: IndicadorAcademico[] = [];
+  isOnline = false;
+
+  constructor(
+    private dataService: DataService,
+    private cdr: ChangeDetectorRef
+  ) {
+    addIcons({
+      calendarOutline,
+      schoolOutline,
+      peopleOutline,
+      ribbonOutline,
+      checkmarkCircleOutline,
+      refreshOutline,
+      pieChartOutline,
+      trendingUpOutline,
+      barChartOutline,
+      filterOutline
+    });
+  }
+
+  ngOnInit(): void {
+    // Suscribirse a cambios en los datos o filtros
+    this.subs.add(
+      this.dataService.indicadores$.subscribe(() => {
+        this.actualizarVista();
+      })
+    );
+
+    this.subs.add(
+      this.dataService.isBackendOnline$.subscribe((online) => {
+        this.isOnline = online;
+      })
+    );
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.inicializarGraficas();
+      this.actualizarVista();
+    }, 150);
+  }
+
+  ionViewDidEnter(): void {
+    this.resizeCharts();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.resizeCharts();
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+    this.barChart?.dispose();
+    this.pieChart?.dispose();
+    this.lineChart?.dispose();
+  }
+
+  onFiltroChange(): void {
+    this.dataService.setFiltros({
+      anio: this.filtroAnio,
+      mes: this.filtroMes,
+      grupo: this.filtroGrupo
+    });
+    this.actualizarVista();
+  }
+
+  cambiarModoPie(modo: 'materias' | 'asistencia'): void {
+    this.pieMode = modo;
+    this.renderPieChart();
+  }
+
+  async recargarDatos(event?: any): Promise<void> {
+    await this.dataService.cargarDesdeBackend();
+    this.actualizarVista();
+    if (event) {
+      event.target.complete();
+    }
+  }
+
+  private actualizarVista(): void {
+    this.datosFiltrados = this.dataService.obtenerDatosFiltrados();
+    this.kpis = this.dataService.calcularKpis(this.datosFiltrados);
+    this.renderizarTodasLasGraficas();
+    this.cdr.detectChanges();
+  }
+
+  private inicializarGraficas(): void {
+    if (this.barChartElement?.nativeElement && !this.barChart) {
+      this.barChart = echarts.init(this.barChartElement.nativeElement);
+    }
+    if (this.pieChartElement?.nativeElement && !this.pieChart) {
+      this.pieChart = echarts.init(this.pieChartElement.nativeElement);
+    }
+    if (this.lineChartElement?.nativeElement && !this.lineChart) {
+      this.lineChart = echarts.init(this.lineChartElement.nativeElement);
+    }
+  }
+
+  private renderizarTodasLasGraficas(): void {
+    this.renderBarChart();
+    this.renderPieChart();
+    this.renderLineChart();
+  }
+
+  /**
+   * Tarjeta 1: "Monthly Progress"
+   * Gráfica de barras agrupadas: "Attendance" (#38bdf8 / #2dd4bf) y "Progress Test" (#8b5cf6)
+   */
+  private renderBarChart(): void {
+    if (!this.barChart) return;
+
+    const mesesLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const asistenciaPorMes: number[] = new Array(12).fill(0);
+    const testPorMes: number[] = new Array(12).fill(0);
+    const conteoMes: number[] = new Array(12).fill(0);
+
+    // Agrupar por mes
+    for (const d of this.datosFiltrados) {
+      const parts = d.fecha.split('-');
+      if (parts.length >= 2) {
+        const mesIdx = parseInt(parts[1], 10) - 1;
+        if (mesIdx >= 0 && mesIdx < 12) {
+          const asistenciaPct = d.inscritos > 0 ? (d.presentes / d.inscritos) * 100 : 0;
+          asistenciaPorMes[mesIdx] += asistenciaPct;
+          testPorMes[mesIdx] += Number(d.promedio);
+          conteoMes[mesIdx]++;
+        }
+      }
+    }
+
+    // Promediar
+    for (let i = 0; i < 12; i++) {
+      if (conteoMes[i] > 0) {
+        asistenciaPorMes[i] = Number((asistenciaPorMes[i] / conteoMes[i]).toFixed(1));
+        testPorMes[i] = Number((testPorMes[i] / conteoMes[i]).toFixed(1));
+      }
+    }
+
+    const option: echarts.EChartsOption = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: any) => {
+          if (!Array.isArray(params)) return '';
+          let tip = `<div style="font-weight:700;margin-bottom:4px;">${params[0].axisValue}</div>`;
+          params.forEach((p) => {
+            tip += `<div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};"></span>
+              <span>${p.seriesName}: <b>${p.value}%</b></span>
+            </div>`;
+          });
+          return tip;
+        }
+      },
+      legend: {
+        bottom: 0,
+        textStyle: { color: '#64748b', fontSize: 12 },
+        icon: 'circle'
+      },
+      grid: {
+        top: 25,
+        left: '3%',
+        right: '4%',
+        bottom: 35,
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: mesesLabels,
+        axisLine: { lineStyle: { color: '#cbd5e1' } },
+        axisLabel: { color: '#64748b', fontSize: 11 }
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 100,
+        axisLabel: {
+          formatter: '{value}%',
+          color: '#64748b',
+          fontSize: 11
+        },
+        splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } }
+      },
+      series: [
+        {
+          name: 'Attendance',
+          type: 'bar',
+          data: asistenciaPorMes,
+          barGap: '20%',
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: '#38bdf8' },
+              { offset: 1, color: '#0ea5e9' }
+            ]),
+            borderRadius: [6, 6, 0, 0]
+          }
+        },
+        {
+          name: 'Progress Test',
+          type: 'bar',
+          data: testPorMes,
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: '#a78bfa' },
+              { offset: 1, color: '#8b5cf6' }
+            ]),
+            borderRadius: [6, 6, 0, 0]
+          }
+        }
+      ]
+    };
+
+    this.barChart.setOption(option, true);
+  }
+
+  /**
+   * Tarjeta 2: "Subject Time Per Token" / "Distribución por Materia"
+   * Gráfica de pastel (Pie/Donut chart) con paleta estética
+   */
+  private renderPieChart(): void {
+    if (!this.pieChart) return;
+
+    let pieData: { name: string; value: number; itemStyle?: any }[] = [];
+
+    if (this.pieMode === 'materias') {
+      // Agrupación por Grupo / Materia
+      const groupCounts = new Map<string, number>();
+      for (const d of this.datosFiltrados) {
+        const g = d.grupo || 'General';
+        groupCounts.set(g, (groupCounts.get(g) || 0) + (d.actividadesEntregadas || 1));
+      }
+
+      const colors = ['#0d9488', '#38bdf8', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981'];
+      let colorIdx = 0;
+      groupCounts.forEach((val, key) => {
+        pieData.push({
+          name: key,
+          value: val,
+          itemStyle: { color: colors[colorIdx % colors.length] }
+        });
+        colorIdx++;
+      });
+
+      if (pieData.length === 0) {
+        pieData = [{ name: 'Sin datos', value: 0 }];
+      }
+    } else {
+      // Modo Asistencia: Presentes vs Ausentes
+      pieData = [
+        {
+          name: 'Presentes',
+          value: this.kpis.totalPresentes,
+          itemStyle: { color: '#0d9488' }
+        },
+        {
+          name: 'Ausentes',
+          value: this.kpis.totalAusentes,
+          itemStyle: { color: '#ef4444' }
+        }
+      ];
+    }
+
+    const option: echarts.EChartsOption = {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{b}: <b>{c}</b> ({d}%)'
+      },
+      legend: {
+        bottom: 0,
+        textStyle: { color: '#64748b', fontSize: 11 },
+        icon: 'circle'
+      },
+      series: [
+        {
+          name: this.pieMode === 'materias' ? 'Distribución' : 'Asistencia',
+          type: 'pie',
+          radius: ['45%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 8,
+            borderColor: '#ffffff',
+            borderWidth: 2
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 14,
+              fontWeight: 'bold',
+              formatter: '{b}\n{d}%'
+            }
+          },
+          labelLine: { show: false },
+          data: pieData
+        }
+      ]
+    };
+
+    this.pieChart.setOption(option, true);
+  }
+
+  /**
+   * Tarjeta 3: "Evolución y Tendencia Académica"
+   * Gráfica de líneas suavizadas (`smooth: true`) y degradado de área
+   */
+  private renderLineChart(): void {
+    if (!this.lineChart) return;
+
+    // Ordenar fechas cronológicamente
+    const ordenados = [...this.datosFiltrados].sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+    const fechas = ordenados.map((d) => d.fecha.substring(5)); // Formato MM-DD
+    const promedios = ordenados.map((d) => d.promedio);
+    const asistencias = ordenados.map((d) =>
+      d.inscritos > 0 ? Number(((d.presentes / d.inscritos) * 100).toFixed(1)) : 0
+    );
+
+    const option: echarts.EChartsOption = {
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params: any) => {
+          if (!Array.isArray(params)) return '';
+          let res = `<div style="font-weight:700;margin-bottom:4px;">${params[0].axisValue}</div>`;
+          params.forEach((p) => {
+            res += `<div style="font-size:12px;display:flex;align-items:center;gap:6px;">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};"></span>
+              <span>${p.seriesName}: <b>${p.value}%</b></span>
+            </div>`;
+          });
+          return res;
+        }
+      },
+      legend: {
+        bottom: 0,
+        textStyle: { color: '#64748b', fontSize: 12 },
+        icon: 'roundRect'
+      },
+      grid: {
+        top: 25,
+        left: '3%',
+        right: '4%',
+        bottom: 35,
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: fechas.length > 0 ? fechas : ['Sin datos'],
+        axisLine: { lineStyle: { color: '#cbd5e1' } },
+        axisLabel: { color: '#64748b', fontSize: 11 }
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 100,
+        axisLabel: {
+          formatter: '{value}%',
+          color: '#64748b',
+          fontSize: 11
+        },
+        splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } }
+      },
+      series: [
+        {
+          name: 'Calificación',
+          type: 'line',
+          smooth: true,
+          data: promedios,
+          itemStyle: { color: '#8b5cf6' },
+          lineStyle: { width: 3 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(139, 92, 246, 0.35)' },
+              { offset: 1, color: 'rgba(139, 92, 246, 0.02)' }
+            ])
+          }
+        },
+        {
+          name: '% Asistencia',
+          type: 'line',
+          smooth: true,
+          data: asistencias,
+          itemStyle: { color: '#0d9488' },
+          lineStyle: { width: 3 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(13, 148, 136, 0.35)' },
+              { offset: 1, color: 'rgba(13, 148, 136, 0.02)' }
+            ])
+          }
+        }
+      ]
+    };
+
+    this.lineChart.setOption(option, true);
+  }
+
+  public resizeCharts(): void {
+    setTimeout(() => {
+      this.barChart?.resize();
+      this.pieChart?.resize();
+      this.lineChart?.resize();
+    }, 100);
+  }
+}

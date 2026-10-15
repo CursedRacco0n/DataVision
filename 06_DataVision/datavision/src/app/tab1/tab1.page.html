@@ -1,0 +1,193 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Progress Analytics</ion-title>
+    <ion-badge slot="end" [color]="isOnline ? 'success' : 'warning'" class="header-status-badge">
+      {{ isOnline ? 'MySQL Conectado' : 'Modo Demo' }}
+    </ion-badge>
+  </ion-toolbar>
+
+  <!-- Barra de Filtros Rápidos Superior -->
+  <ion-toolbar class="filters-toolbar">
+    <div class="filters-container">
+      <div class="filter-item">
+        <ion-icon name="calendar-outline" class="filter-icon"></ion-icon>
+        <ion-select
+          [(ngModel)]="filtroAnio"
+          (ionChange)="onFiltroChange()"
+          interface="popover"
+          aria-label="Año"
+          placeholder="Año"
+        >
+          <ion-select-option value="todos">Todos los Años</ion-select-option>
+          <ion-select-option value="2024">2024</ion-select-option>
+          <ion-select-option value="2025">2025</ion-select-option>
+          <ion-select-option value="2026">2026</ion-select-option>
+        </ion-select>
+      </div>
+
+      <div class="filter-item">
+        <ion-icon name="filter-outline" class="filter-icon"></ion-icon>
+        <ion-select
+          [(ngModel)]="filtroMes"
+          (ionChange)="onFiltroChange()"
+          interface="popover"
+          aria-label="Mes"
+          placeholder="Mes"
+        >
+          <ion-select-option value="todos">Todos los Meses</ion-select-option>
+          <ion-select-option value="01">Enero</ion-select-option>
+          <ion-select-option value="02">Febrero</ion-select-option>
+          <ion-select-option value="03">Marzo</ion-select-option>
+          <ion-select-option value="04">Abril</ion-select-option>
+          <ion-select-option value="05">Mayo</ion-select-option>
+          <ion-select-option value="06">Junio</ion-select-option>
+          <ion-select-option value="07">Julio</ion-select-option>
+          <ion-select-option value="08">Agosto</ion-select-option>
+          <ion-select-option value="09">Septiembre</ion-select-option>
+          <ion-select-option value="10">Octubre</ion-select-option>
+          <ion-select-option value="11">Noviembre</ion-select-option>
+          <ion-select-option value="12">Diciembre</ion-select-option>
+        </ion-select>
+      </div>
+
+      <div class="filter-item">
+        <ion-icon name="school-outline" class="filter-icon"></ion-icon>
+        <ion-select
+          [(ngModel)]="filtroGrupo"
+          (ionChange)="onFiltroChange()"
+          interface="popover"
+          aria-label="Materia / Grupo"
+          placeholder="Materia / Grupo"
+        >
+          <ion-select-option value="todos">Todos</ion-select-option>
+          <ion-select-option value="Maths">Maths</ion-select-option>
+          <ion-select-option value="English">English</ion-select-option>
+          <ion-select-option value="Physics">Physics</ion-select-option>
+          <ion-select-option value="Chemistry">Chemistry</ion-select-option>
+          <ion-select-option value="Biology">Biology</ion-select-option>
+          <ion-select-option value="2A">Grupo 2A</ion-select-option>
+          <ion-select-option value="2B">Grupo 2B</ion-select-option>
+          <ion-select-option value="2C">Grupo 2C</ion-select-option>
+        </ion-select>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="recargarDatos($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Tarjetas Resumen KPIs -->
+  <ion-grid class="kpi-grid">
+    <ion-row>
+      <ion-col size="6" size-md="3">
+        <div class="kpi-card teal-accent">
+          <div class="kpi-icon-wrap teal-bg">
+            <ion-icon name="people-outline"></ion-icon>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Asistencia</span>
+            <h2 class="kpi-value">{{ kpis.asistenciaPonderada }}%</h2>
+            <ion-progress-bar [value]="kpis.asistenciaPonderada / 100" color="primary"></ion-progress-bar>
+          </div>
+        </div>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <div class="kpi-card purple-accent">
+          <div class="kpi-icon-wrap purple-bg">
+            <ion-icon name="ribbon-outline"></ion-icon>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Promedio</span>
+            <h2 class="kpi-value">{{ kpis.promedioGlobal }}</h2>
+            <span class="kpi-subtext">Escala 0 - 100</span>
+          </div>
+        </div>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <div class="kpi-card sky-accent">
+          <div class="kpi-icon-wrap sky-bg">
+            <ion-icon name="bar-chart-outline"></ion-icon>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Registros</span>
+            <h2 class="kpi-value">{{ kpis.totalRegistros }}</h2>
+            <span class="kpi-subtext">{{ datosFiltrados.length }} filtrados</span>
+          </div>
+        </div>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <div class="kpi-card amber-accent">
+          <div class="kpi-icon-wrap amber-bg">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-label">Entregas</span>
+            <h2 class="kpi-value">{{ kpis.tasaEntregas }}%</h2>
+            <span class="kpi-subtext">Cumplimiento</span>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Tarjeta 1: "Monthly Progress" -->
+  <ion-card class="chart-card">
+    <ion-card-header>
+      <div class="card-header-flex">
+        <div>
+          <ion-card-title>Monthly Progress</ion-card-title>
+          <ion-card-subtitle>Attendance vs Progress Test</ion-card-subtitle>
+        </div>
+        <span class="badge-pill badge-teal">{{ filtroAnio }}</span>
+      </div>
+    </ion-card-header>
+    <ion-card-content>
+      <div #barChartContainer class="echarts-box"></div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Tarjeta 2: "Subject Time Per Token" / "Distribución por Materia" -->
+  <ion-card class="chart-card">
+    <ion-card-header>
+      <div class="card-header-flex">
+        <div>
+          <ion-card-title>Subject Time Per Token</ion-card-title>
+          <ion-card-subtitle>Distribución Académica y Asistencia</ion-card-subtitle>
+        </div>
+        <ion-segment [value]="pieMode" (ionChange)="cambiarModoPie($any($event.detail.value))" mode="ios">
+          <ion-segment-button value="materias">
+            <ion-label>Materias</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="asistencia">
+            <ion-label>Pres/Aus</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
+    </ion-card-header>
+    <ion-card-content>
+      <div #pieChartContainer class="echarts-box"></div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Tarjeta 3: "Evolución y Tendencia Académica" -->
+  <ion-card class="chart-card">
+    <ion-card-header>
+      <div class="card-header-flex">
+        <div>
+          <ion-card-title>Evolución y Tendencia Académica</ion-card-title>
+          <ion-card-subtitle>Trayectoria histórica de calificaciones y asistencia</ion-card-subtitle>
+        </div>
+        <span class="badge-pill badge-purple">Tendencia</span>
+      </div>
+    </ion-card-header>
+    <ion-card-content>
+      <div #lineChartContainer class="echarts-box"></div>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

@@ -1,0 +1,65 @@
+/**
+ * DataVision - Theme Variables
+ * Teal Primary Palette (#0d9488) & Light Mode Styling
+ */
+
+:root {
+  /** Primary: Teal #0d9488 **/
+  --ion-color-primary: #0d9488;
+  --ion-color-primary-rgb: 13, 148, 136;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0b7f74;
+  --ion-color-primary-tint: #259f93;
+
+  /** Secondary: Cyan / Sky #0ea5e9 **/
+  --ion-color-secondary: #0ea5e9;
+  --ion-color-secondary-rgb: 14, 165, 233;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #0c91ce;
+  --ion-color-secondary-tint: #26aee9;
+
+  /** Tertiary: Purple #8b5cf6 **/
+  --ion-color-tertiary: #8b5cf6;
+  --ion-color-tertiary-rgb: 139, 92, 246;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #7a51d9;
+  --ion-color-tertiary-tint: #976cf7;
+
+  /** Success: Emerald #10b981 **/
+  --ion-color-success: #10b981;
+  --ion-color-success-rgb: 16, 185, 129;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #0ea372;
+  --ion-color-success-tint: #28c08e;
+
+  /** Warning: Amber #f59e0b **/
+  --ion-color-warning: #f59e0b;
+  --ion-color-warning-rgb: 245, 158, 11;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #d88b0a;
+  --ion-color-warning-tint: #f6a823;
+
+  /** Danger: Rose #ef4444 **/
+  --ion-color-danger: #ef4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #d23c3c;
+  --ion-color-danger-tint: #f15757;
+
+  /** Backgrounds **/
+  --ion-background-color: #f4f6f9;
+  --ion-background-color-rgb: 244, 246, 249;
+
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-toolbar-background: #0d9488;
+  --ion-toolbar-color: #ffffff;
+
+  --ion-font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}

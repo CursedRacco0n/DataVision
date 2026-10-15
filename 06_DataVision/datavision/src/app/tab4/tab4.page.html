@@ -1,0 +1,181 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Datos y Conexión MySQL</ion-title>
+    <ion-button slot="end" fill="clear" (click)="exportarCsv()" title="Exportar CSV">
+      <ion-icon name="download-outline" slot="icon-only"></ion-icon>
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="recargarDesdeMySQL($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Tarjeta de Salud y Estado de Servidor PHP / MySQL -->
+  <ion-card class="connection-card">
+    <ion-card-header>
+      <div class="header-flex">
+        <ion-card-title>
+          <ion-icon name="server-outline" color="primary"></ion-icon>
+          Estado de Conexión PHP
+        </ion-card-title>
+        <span
+          class="badge-pill"
+          [class.badge-teal]="estadoConexion === 'conectado'"
+          [class.badge-danger]="estadoConexion === 'desconectado'"
+        >
+          <ion-icon
+            [name]="estadoConexion === 'conectado' ? 'checkmark-circle-outline' : 'close-circle-outline'"
+          ></ion-icon>
+          {{ estadoConexion === 'conectado' ? 'Online' : 'Offline / Demo' }}
+        </span>
+      </div>
+      <ion-card-subtitle>{{ mensajeEstado }}</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <div class="url-input-wrap">
+        <ion-item lines="none" class="url-item">
+          <ion-icon name="link-outline" slot="start" color="medium"></ion-icon>
+          <ion-input
+            [(ngModel)]="apiUrl"
+            placeholder="http://localhost/06_DataVision/backend_starter/api"
+            aria-label="URL del Backend"
+          ></ion-input>
+        </ion-item>
+      </div>
+
+      <div class="connection-actions">
+        <ion-button size="small" fill="outline" color="primary" (click)="guardarUrlApi()">
+          Guardar URL
+        </ion-button>
+
+        <ion-button
+          size="small"
+          color="primary"
+          [disabled]="probandoConexion"
+          (click)="probarConexion()"
+        >
+          <ion-spinner *ngIf="probandoConexion" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!probandoConexion" name="pulse-outline" slot="start"></ion-icon>
+          Probar Conexión (Health)
+        </ion-button>
+
+        <ion-button
+          size="small"
+          fill="outline"
+          color="secondary"
+          [disabled]="cargando"
+          (click)="recargarDesdeMySQL()"
+        >
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Sincronizar BD
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Barra de Búsqueda y Chips de Filtro -->
+  <div class="search-section">
+    <ion-searchbar
+      [(ngModel)]="terminoBusqueda"
+      placeholder="Buscar por materia, fecha o grupo..."
+      [debounce]="250"
+      show-clear-button="always"
+    ></ion-searchbar>
+
+    <div class="origin-chips">
+      <ion-chip
+        [color]="filtroOrigen === 'todos' ? 'primary' : 'medium'"
+        (click)="filtroOrigen = 'todos'"
+      >
+        <ion-label>Todos ({{ indicadores.length }})</ion-label>
+      </ion-chip>
+
+      <ion-chip
+        [color]="filtroOrigen === 'manual' ? 'primary' : 'medium'"
+        (click)="filtroOrigen = 'manual'"
+      >
+        <ion-label>Manual</ion-label>
+      </ion-chip>
+
+      <ion-chip
+        [color]="filtroOrigen === 'csv' ? 'primary' : 'medium'"
+        (click)="filtroOrigen = 'csv'"
+      >
+        <ion-label>CSV</ion-label>
+      </ion-chip>
+    </div>
+  </div>
+
+  <!-- Listado de Registros -->
+  <div class="records-header">
+    <h3>Registros Académicos ({{ registrosFiltrados.length }})</h3>
+    <ion-button fill="clear" size="small" color="primary" (click)="exportarCsv()">
+      <ion-icon name="download-outline" slot="start"></ion-icon>
+      Exportar CSV
+    </ion-button>
+  </div>
+
+  <ion-list class="records-list">
+    <ion-card *ngFor="let item of registrosFiltrados" class="record-card">
+      <ion-card-content>
+        <div class="record-card-top">
+          <div class="record-title-group">
+            <span class="record-subject">{{ item.grupo }}</span>
+            <span class="record-date">{{ item.fecha }}</span>
+          </div>
+
+          <div class="record-badges">
+            <span
+              class="badge-pill"
+              [class.badge-teal]="item.origen !== 'csv'"
+              [class.badge-purple]="item.origen === 'csv'"
+            >
+              {{ item.origen || 'manual' }}
+            </span>
+
+            <ion-button fill="clear" color="danger" size="small" (click)="eliminar(item.id)">
+              <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+
+        <div class="record-metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">Asistencia</span>
+            <span class="metric-val">
+              {{ item.presentes }}/{{ item.inscritos }}
+              <small>({{ ((item.presentes / item.inscritos) * 100).toFixed(0) }}%)</small>
+            </span>
+          </div>
+
+          <div class="metric-item">
+            <span class="metric-label">Promedio</span>
+            <span class="metric-val purple-text">{{ item.promedio }}</span>
+          </div>
+
+          <div class="metric-item">
+            <span class="metric-label">Actividades</span>
+            <span class="metric-val">
+              {{ item.actividadesEntregadas }}/{{ item.actividadesProgramadas }}
+            </span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="registrosFiltrados.length === 0" class="empty-state">
+      <p>No se encontraron registros que coincidan con la búsqueda.</p>
+    </div>
+  </ion-list>
+
+  <ion-toast
+    [isOpen]="mostrarToast"
+    [message]="toastMensaje"
+    [color]="toastColor"
+    [duration]="3200"
+    (didDismiss)="mostrarToast = false"
+  ></ion-toast>
+</ion-content>

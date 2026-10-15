@@ -1,0 +1,7 @@
+{
+  "name": "datavision",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

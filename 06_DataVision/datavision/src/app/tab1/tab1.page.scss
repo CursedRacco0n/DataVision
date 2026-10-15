@@ -1,0 +1,145 @@
+.header-status-badge {
+  font-size: 0.72rem;
+  margin-right: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 4px 8px;
+}
+
+.filters-toolbar {
+  --background: #0b7f74;
+  --min-height: 48px;
+  padding: 4px 10px;
+
+  .filters-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .filter-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    .filter-icon {
+      color: #ffffff;
+      font-size: 0.95rem;
+      margin-right: 2px;
+    }
+
+    ion-select {
+      --color: #ffffff;
+      --placeholder-color: #e2e8f0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      min-height: 32px;
+    }
+  }
+}
+
+.kpi-grid {
+  padding: 12px 10px 4px;
+
+  ion-col {
+    padding: 6px;
+  }
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+
+  .kpi-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      font-size: 1.25rem;
+    }
+
+    &.teal-bg {
+      background: #ccfbf1;
+      color: #0d9488;
+    }
+    &.purple-bg {
+      background: #ede9fe;
+      color: #8b5cf6;
+    }
+    &.sky-bg {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+    &.amber-bg {
+      background: #fef3c7;
+      color: #d97706;
+    }
+  }
+
+  .kpi-info {
+    .kpi-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 2px 0 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-subtext {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    ion-progress-bar {
+      height: 5px;
+      border-radius: 999px;
+      margin-top: 4px;
+    }
+  }
+}
+
+.chart-card {
+  .card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    ion-segment {
+      width: 140px;
+      --background: #f1f5f9;
+      font-size: 0.75rem;
+    }
+  }
+}
