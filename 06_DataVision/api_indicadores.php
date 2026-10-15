@@ -40,12 +40,28 @@ if (file_exists(__DIR__ . '/backend_starter/config.php')) {
 }
 
 function get_pdo(array $cfg): PDO {
-    $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $cfg['host'], $cfg['port'], $cfg['database']);
-    return new PDO($dsn, $cfg['username'], $cfg['password'], [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false
-    ]);
+    $host = $cfg['host'] ?? '127.0.0.1';
+    $database = $cfg['database'] ?? 'datavision_academico';
+    $username = $cfg['username'] ?? 'root';
+    $password = $cfg['password'] ?? '';
+    $configuredPort = (int)($cfg['port'] ?? 3306);
+    $ports = array_unique([$configuredPort, 3306, 3304, 3307, 3308]);
+
+    $lastError = null;
+    foreach ($ports as $port) {
+        try {
+            $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $host, $port, $database);
+            return new PDO($dsn, $username, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_TIMEOUT => 2,
+            ]);
+        } catch (Throwable $e) {
+            $lastError = $e;
+        }
+    }
+    throw new RuntimeException("MySQL no disponible en puertos (" . implode(', ', $ports) . "). Detalle: " . ($lastError ? $lastError->getMessage() : ''));
 }
 
 $action = $_GET['action'] ?? '';
