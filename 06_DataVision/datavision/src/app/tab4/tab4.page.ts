@@ -131,6 +131,7 @@ export class Tab4Page implements OnInit, OnDestroy {
 
     // Test inicial de conexión
     this.probarConexion();
+    this.recargarDesdeMySQL();
   }
 
   ngOnDestroy(): void {
@@ -138,9 +139,12 @@ export class Tab4Page implements OnInit, OnDestroy {
   }
 
   guardarUrlApi(): void {
-    this.apiService.setBaseUrl(this.apiUrl);
-    this.lanzarToast('URL de servidor guardada', 'success');
-    this.probarConexion();
+    try {
+      this.apiService.setBaseUrl(this.apiUrl);
+      this.lanzarToast('URL de servidor guardada', 'success');
+      this.probarConexion();
+      this.recargarDesdeMySQL();
+    } catch (e: any) { this.lanzarToast(e.message, 'danger'); }
   }
 
   async probarConexion(): Promise<void> {
@@ -171,7 +175,7 @@ export class Tab4Page implements OnInit, OnDestroy {
     if (ok) {
       this.lanzarToast('Datos actualizados desde MySQL', 'success');
     } else {
-      this.lanzarToast('No se pudo sincronizar con MySQL. Mostrando datos locales.', 'warning');
+      this.lanzarToast('No se pudo sincronizar con MySQL. Verifica la conexión.', 'warning');
     }
     this.cargando = false;
     if (event) {
@@ -189,10 +193,12 @@ export class Tab4Page implements OnInit, OnDestroy {
     this.lanzarToast(`Exportados ${filtrados.length} registros a CSV con Papa Parse`, 'success');
   }
 
-  eliminar(id?: number): void {
-    if (!id) return;
-    this.dataService.eliminarIndicador(id);
-    this.lanzarToast('Registro eliminado de la vista', 'warning');
+  async eliminar(id?: number): Promise<void> {
+    if (!id || !confirm('¿Eliminar definitivamente este registro de MySQL?')) return;
+    try {
+      await this.dataService.eliminarIndicador(id);
+      this.lanzarToast('Registro eliminado de MySQL', 'success');
+    } catch (e: any) { this.lanzarToast(e.message, 'danger'); }
   }
 
   get registrosFiltrados(): IndicadorAcademico[] {

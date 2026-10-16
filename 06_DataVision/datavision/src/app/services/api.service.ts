@@ -1,75 +1,23 @@
 import { Injectable } from '@angular/core';
-import axios, { AxiosInstance } from 'axios';
-import { IndicadorAcademico } from '../models/indicador.model';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class ApiService {
-  private readonly http: AxiosInstance = axios.create({
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-  });
-
-  private defaultUrl = 'http://localhost/06_DataVision/backend_starter/api';
-
-  constructor() {
-    if (!localStorage.getItem('api_base_url')) {
-      localStorage.setItem('api_base_url', this.defaultUrl);
-    }
+  private baseUrl = API_BASE_URL;
+  constructor(private http: HttpClient) {
+    try { this.baseUrl = localStorage.getItem('datavision_api_url') || API_BASE_URL; } catch {}
   }
-
-  setBaseUrl(url: string): void {
-    localStorage.setItem('api_base_url', url.trim().replace(/\/$/, ''));
+  getBaseUrl(): string { return this.baseUrl; }
+  setBaseUrl(value: string): void {
+    const url = value.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\/[^\s]+$/i.test(url)) throw new Error('Introduce una URL HTTP(S) válida');
+    this.baseUrl = url;
+    try { localStorage.setItem('datavision_api_url', url); } catch {}
   }
-
-  getBaseUrl(): string {
-    return localStorage.getItem('api_base_url') || this.defaultUrl;
-  }
-
-  private endpoint(path: string): string {
-    const base = this.getBaseUrl();
-    return `${base}/${path.replace(/^\//, '')}`;
-  }
-
-  async checkHealth(): Promise<{ ok: boolean; service?: string; database?: string; error?: string }> {
-    try {
-      const res = await this.http.get(this.endpoint('health.php'));
-      return res.data;
-    } catch (err) {
-      return { ok: false, error: this.errorText(err) };
-    }
-  }
-
-  async getIndicadores(params?: Record<string, any>): Promise<{ ok: boolean; items: IndicadorAcademico[]; total?: number }> {
-    const res = await this.http.get(this.endpoint('indicadores/list.php'), { params });
-    return res.data;
-  }
-
-  async createIndicador(indicador: IndicadorAcademico): Promise<{ ok: boolean; id?: number; error?: string }> {
-    const res = await this.http.post(this.endpoint('indicadores/create.php'), indicador);
-    return res.data;
-  }
-
-  async importIndicadores(items: IndicadorAcademico[]): Promise<{
-    ok: boolean;
-    insertados: number;
-    rechazados: number;
-    errores: string[];
-  }> {
-    const res = await this.http.post(this.endpoint('indicadores/import.php'), { items });
-    return res.data;
-  }
-
-  errorText(err: unknown): string {
-    if (axios.isAxiosError(err)) {
-      if (err.response) {
-        const errorMsg = err.response.data?.error || err.response.data?.message || err.message;
-        return `Error ${err.response.status}: ${errorMsg}`;
-      }
-      return `Error de red: ${err.message} (Verifique la URL del backend PHP)`;
-    }
-    return err instanceof Error ? err.message : String(err);
+  url(path: string): string { return `${this.baseUrl}/${path.replace(/^\/+/, '')}`; }
+  checkHealth(): Promise<{ok: boolean; service?: string; database?: string; error?: string}> {
+    return firstValueFrom(this.http.get<{ok: boolean; service?: string; database?: string; error?: string}>(this.url('health.php')));
   }
 }

@@ -25,29 +25,6 @@
         <p>Toca aquí para buscar en tu dispositivo (.csv)</p>
         <span class="file-format-note">Encabezados requeridos: fecha, grupo, inscritos, presentes, promedio...</span>
       </div>
-
-      <div class="sample-actions">
-        <ion-button
-          fill="outline"
-          size="small"
-          color="primary"
-          (click)="cargarEjemploValido()"
-        >
-          <ion-icon name="flask-outline" slot="start"></ion-icon>
-          Cargar Ejemplo Válido
-        </ion-button>
-
-        <ion-button
-          fill="outline"
-          size="small"
-          color="danger"
-          (click)="cargarEjemploConErrores()"
-        >
-          <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
-          Probar CSV con Errores
-        </ion-button>
-      </div>
-
       <div *ngIf="nombreArchivo" class="file-badge-active">
         <ion-icon name="document-text-outline"></ion-icon>
         <span>{{ nombreArchivo }}</span>

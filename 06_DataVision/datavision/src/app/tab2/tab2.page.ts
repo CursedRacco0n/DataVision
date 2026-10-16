@@ -128,45 +128,6 @@ export class Tab2Page {
     }
   }
 
-  /**
-   * Carga dataset de demostración válido (datos_ejemplo.csv)
-   */
-  cargarEjemploValido(): void {
-    const csvEjemplo = `fecha,grupo,inscritos,presentes,promedio,actividadesProgramadas,actividadesEntregadas
-2026-09-05,2A,30,28,85.0,30,26
-2026-09-05,2B,28,25,80.0,28,23
-2026-09-05,2C,26,22,91.0,26,20
-2026-09-06,2A,30,28,85.5,30,26
-2026-09-06,2B,28,25,80.5,28,23
-2026-09-06,2C,26,22,91.5,26,20
-2026-09-07,2A,30,28,86.0,30,26
-2026-09-07,2B,28,25,81.0,28,23
-2026-09-07,2C,26,22,92.0,26,20`;
-
-    this.nombreArchivo = 'datos_ejemplo.csv (Demostración)';
-    const res = this.csvService.procesarTextoCsv(csvEjemplo);
-    this.filasValidas = res.filasValidas;
-    this.filasConError = res.filasConError;
-    this.vistaSegmento = 'validas';
-    this.lanzarToast('Dataset válido cargado correctamente con Papa Parse', 'success');
-  }
-
-  /**
-   * Carga dataset con errores (datos_con_errores.csv) para probar validaciones
-   */
-  cargarEjemploConErrores(): void {
-    const csvConErrores = `fecha,grupo,inscritos,presentes,promedio,actividadesProgramadas,actividadesEntregadas
-2026-10-14,2A,30,31,89,30,23
-2026-10-14,2B,28,26,130,28,20
-2026-10-14,2C,26,25,89,26,24`;
-
-    this.nombreArchivo = 'datos_con_errores.csv (Demostración)';
-    const res = this.csvService.procesarTextoCsv(csvConErrores);
-    this.filasValidas = res.filasValidas;
-    this.filasConError = res.filasConError;
-    this.vistaSegmento = 'errores';
-    this.lanzarToast('Dataset con errores procesado: se detectaron anomalías', 'warning');
-  }
 
   /**
    * Sincroniza las filas válidas en MySQL / Memoria reactiva y actualiza ECharts
@@ -181,11 +142,11 @@ export class Tab2Page {
     try {
       const res = await this.dataService.importarCsvFilas(this.filasValidas);
       this.alertaTitulo = 'Sincronización Completada';
-      this.alertaMensaje = `Registros insertados: ${res.insertados}\nRechazados: ${res.rechazados}\n\nLas 3 gráficas de Apache ECharts en Analytics se han actualizado de forma reactiva.`;
+      this.alertaMensaje = `Registros insertados: ${res.insertados}\nRechazados: ${res.rechazados}\n\nEl dashboard recupera los datos desde MySQL.`;
       this.mostrarAlerta = true;
 
       // Limpiar cola de válidas importadas
-      this.filasValidas = [];
+      if (res.rechazados === 0) this.filasValidas = [];
     } catch (err: any) {
       this.lanzarToast(`Error al sincronizar: ${err.message}`, 'danger');
     } finally {

@@ -14,6 +14,18 @@ try {
     $where = [];
     $params = [];
 
+    foreach (['desde', 'hasta'] as $campo) {
+        if (isset($_GET[$campo]) && $_GET[$campo] !== '') {
+            $d = DateTimeImmutable::createFromFormat('!Y-m-d', (string)$_GET[$campo]);
+            if (!$d || $d->format('Y-m-d') !== $_GET[$campo]) {
+                reply(422, ['ok' => false, 'error' => "Fecha inválida en {$campo}"]);
+            }
+        }
+    }
+    if (isset($_GET['mes']) && $_GET['mes'] !== '' && (!ctype_digit((string)$_GET['mes']) || (int)$_GET['mes'] < 1 || (int)$_GET['mes'] > 12)) {
+        reply(422, ['ok' => false, 'error' => 'Mes inválido']);
+    }
+
     // Filtro por grupo o materia
     if (!empty($_GET['grupo'])) {
         $where[] = 'grupo = :grupo';

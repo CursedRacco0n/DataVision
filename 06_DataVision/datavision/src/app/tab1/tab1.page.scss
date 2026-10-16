@@ -143,3 +143,10 @@
     }
   }
 }
+
+.api-message { margin: 12px 16px; padding: 12px; background: #f1f5f9; border-radius: 9px; color: #334155; }
+.api-error { color: #991b1b; background: #fee2e2; }
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; min-width: 650px; font-size: 0.85rem; }
+.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+.data-table th { color: #475569; background: #f8fafc; }

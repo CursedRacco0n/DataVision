@@ -27,10 +27,10 @@ $origen = in_array($body['origen'] ?? '', ['manual', 'csv'], true) ? $body['orig
 // Validaciones obligatorias
 $errores = [];
 
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !strtotime($fecha)) {
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) || !($fechaObj = DateTimeImmutable::createFromFormat('!Y-m-d', $fecha)) || $fechaObj->format('Y-m-d') !== $fecha) {
     $errores[] = 'Formato de fecha inválido. Debe ser YYYY-MM-DD.';
 }
-if ($grupo === '' || mb_strlen($grupo) > 20) {
+if ($grupo === '' || count(preg_split('//u', $grupo, -1, PREG_SPLIT_NO_EMPTY) ?: []) > 20) {
     $errores[] = 'El grupo/materia debe tener entre 1 y 20 caracteres.';
 }
 if ($inscritos === null || $inscritos <= 0) {
@@ -91,5 +91,5 @@ try {
         reply(409, ['ok' => false, 'error' => 'Registro duplicado para fecha y grupo.']);
     }
     error_log((string)$e);
-    reply(500, ['ok' => false, 'error' => 'Error al guardar en la base de datos: ' . $e->getMessage()]);
+    reply(500, ['ok' => false, 'error' => 'Error al guardar en la base de datos']);
 }

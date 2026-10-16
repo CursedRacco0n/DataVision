@@ -2,7 +2,7 @@
   <ion-toolbar color="primary">
     <ion-title>Progress Analytics</ion-title>
     <ion-badge slot="end" [color]="isOnline ? 'success' : 'warning'" class="header-status-badge">
-      {{ isOnline ? 'MySQL Conectado' : 'Modo Demo' }}
+      {{ isOnline ? 'MySQL Conectado' : 'Sin conexión' }}
     </ion-badge>
   </ion-toolbar>
 
@@ -19,9 +19,7 @@
           placeholder="Año"
         >
           <ion-select-option value="todos">Todos los Años</ion-select-option>
-          <ion-select-option value="2024">2024</ion-select-option>
-          <ion-select-option value="2025">2025</ion-select-option>
-          <ion-select-option value="2026">2026</ion-select-option>
+          <ion-select-option *ngFor="let anio of aniosDisponibles" [value]="anio">{{ anio }}</ion-select-option>
         </ion-select>
       </div>
 
@@ -60,14 +58,7 @@
           placeholder="Materia / Grupo"
         >
           <ion-select-option value="todos">Todos</ion-select-option>
-          <ion-select-option value="Maths">Maths</ion-select-option>
-          <ion-select-option value="English">English</ion-select-option>
-          <ion-select-option value="Physics">Physics</ion-select-option>
-          <ion-select-option value="Chemistry">Chemistry</ion-select-option>
-          <ion-select-option value="Biology">Biology</ion-select-option>
-          <ion-select-option value="2A">Grupo 2A</ion-select-option>
-          <ion-select-option value="2B">Grupo 2B</ion-select-option>
-          <ion-select-option value="2C">Grupo 2C</ion-select-option>
+          <ion-select-option *ngFor="let grupo of gruposDisponibles" [value]="grupo">{{ grupo }}</ion-select-option>
         </ion-select>
       </div>
     </div>
@@ -78,6 +69,10 @@
   <ion-refresher slot="fixed" (ionRefresh)="recargarDatos($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+
+  <div class="api-message" *ngIf="cargando">Cargando registros de MySQL...</div>
+  <div class="api-message api-error" *ngIf="errorCarga" role="alert">{{ errorCarga }}</div>
+  <div class="api-message" *ngIf="!cargando && !errorCarga && !datosFiltrados.length">No hay registros para los filtros seleccionados.</div>
 
   <!-- Tarjetas Resumen KPIs -->
   <ion-grid class="kpi-grid">
@@ -157,12 +152,12 @@
     <ion-card-header>
       <div class="card-header-flex">
         <div>
-          <ion-card-title>Subject Time Per Token</ion-card-title>
+          <ion-card-title>Distribución por grupo</ion-card-title>
           <ion-card-subtitle>Distribución Académica y Asistencia</ion-card-subtitle>
         </div>
         <ion-segment [value]="pieMode" (ionChange)="cambiarModoPie($any($event.detail.value))" mode="ios">
           <ion-segment-button value="materias">
-            <ion-label>Materias</ion-label>
+            <ion-label>Grupos</ion-label>
           </ion-segment-button>
           <ion-segment-button value="asistencia">
             <ion-label>Pres/Aus</ion-label>
@@ -188,6 +183,22 @@
     </ion-card-header>
     <ion-card-content>
       <div #lineChartContainer class="echarts-box"></div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card class="chart-card">
+    <ion-card-header><ion-card-title>Registros obtenidos de MySQL</ion-card-title>
+      <ion-card-subtitle>{{ datosFiltrados.length }} registros según los filtros</ion-card-subtitle></ion-card-header>
+    <ion-card-content>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Fecha</th><th>Grupo</th><th>Inscritos</th><th>Presentes</th><th>Promedio</th><th>Actividades entregadas</th><th>Origen</th></tr></thead>
+          <tbody><tr *ngFor="let item of datosFiltrados">
+            <td>{{ item.fecha }}</td><td>{{ item.grupo }}</td><td>{{ item.inscritos }}</td><td>{{ item.presentes }}</td><td>{{ item.promedio }}</td>
+            <td>{{ item.actividadesEntregadas }}/{{ item.actividadesProgramadas }}</td><td>{{ item.origen }}</td>
+          </tr></tbody>
+        </table>
+      </div>
     </ion-card-content>
   </ion-card>
 </ion-content>

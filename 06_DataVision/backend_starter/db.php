@@ -25,7 +25,7 @@ function db(): PDO {
 
     // Lista de puertos a intentar: el configurado primero, luego los puertos comunes de XAMPP / MariaDB
     $puertoConfigurado = (int)($c['port'] ?? 3306);
-    $puertosAIntentar = array_unique([$puertoConfigurado, 3306, 3304, 3307, 3308]);
+    $puertosAIntentar = [$puertoConfigurado]; // Evita conectarse a una instancia equivocada.
 
     $pdoOptions = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

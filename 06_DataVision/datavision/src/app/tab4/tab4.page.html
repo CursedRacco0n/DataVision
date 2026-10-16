@@ -28,7 +28,7 @@
           <ion-icon
             [name]="estadoConexion === 'conectado' ? 'checkmark-circle-outline' : 'close-circle-outline'"
           ></ion-icon>
-          {{ estadoConexion === 'conectado' ? 'Online' : 'Offline / Demo' }}
+          {{ estadoConexion === 'conectado' ? 'Online' : 'Sin conexión' }}
         </span>
       </div>
       <ion-card-subtitle>{{ mensajeEstado }}</ion-card-subtitle>
@@ -147,7 +147,7 @@
             <span class="metric-label">Asistencia</span>
             <span class="metric-val">
               {{ item.presentes }}/{{ item.inscritos }}
-              <small>({{ ((item.presentes / item.inscritos) * 100).toFixed(0) }}%)</small>
+              <small>({{ (item.inscritos ? (item.presentes / item.inscritos) * 100 : 0).toFixed(0) }}%)</small>
             </span>
           </div>
 

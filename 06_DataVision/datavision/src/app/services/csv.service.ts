@@ -1,163 +1,66 @@
 import { Injectable } from '@angular/core';
-import Papa from 'papaparse';
 import { IndicadorAcademico, ValidacionCsvFila } from '../models/indicador.model';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class CsvService {
-
-  /**
-   * Procesa un archivo CSV mediante Papa Parse y valida regla por regla
-   */
-  procesarArchivoCsv(file: File): Promise<{
-    filasValidas: IndicadorAcademico[];
-    filasConError: ValidacionCsvFila[];
-    todasLasFilas: ValidacionCsvFila[];
-  }> {
-    return new Promise((resolve, reject) => {
-      Papa.parse<Record<string, string>>(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          const procesadas = this.validarFilas(results.data);
-          resolve(procesadas);
-        },
-        error: (error) => {
-          reject(new Error(`Error al leer archivo CSV: ${error.message}`));
-        }
-      });
-    });
+  async procesarArchivoCsv(file: File) {
+    return this.procesarTextoCsv(await file.text());
   }
 
-  /**
-   * Procesa una cadena de texto en formato CSV directamente (para datos de muestra)
-   */
-  procesarTextoCsv(csvText: string): {
-    filasValidas: IndicadorAcademico[];
-    filasConError: ValidacionCsvFila[];
-    todasLasFilas: ValidacionCsvFila[];
-  } {
-    const results = Papa.parse<Record<string, string>>(csvText, {
-      header: true,
-      skipEmptyLines: true,
-    });
-    return this.validarFilas(results.data);
+  // Parser CSV con soporte de comillas escapadas, comas y saltos de línea entrecomillados.
+  private parse(text: string): string[][] {
+    const rows: string[][] = []; let row: string[] = []; let cell = ''; let quoted = false;
+    text = text.replace(/^\uFEFF/, '');
+    for (let i=0;i<text.length;i++) {
+      const c=text[i];
+      if (c==='"') {
+        if (quoted && text[i+1]==='"') {cell+='"';i++;} else quoted=!quoted;
+      } else if (c===',' && !quoted) {row.push(cell);cell='';}
+      else if ((c==='\n' || c==='\r') && !quoted) {
+        if (c==='\r' && text[i+1]==='\n') i++;
+        row.push(cell); if (row.some(x=>x.trim())) rows.push(row);
+        row=[];cell='';
+      } else cell+=c;
+    }
+    if (quoted) throw new Error('CSV con comillas sin cerrar');
+    row.push(cell); if (row.some(x=>x.trim())) rows.push(row);
+    return rows;
   }
 
-  /**
-   * Valida fila por fila según los lineamientos del ENUNCIADO y CONTRATO_API
-   */
-  private validarFilas(rows: Record<string, string>[]): {
-    filasValidas: IndicadorAcademico[];
-    filasConError: ValidacionCsvFila[];
-    todasLasFilas: ValidacionCsvFila[];
-  } {
-    const filasValidas: IndicadorAcademico[] = [];
-    const filasConError: ValidacionCsvFila[] = [];
-    const todasLasFilas: ValidacionCsvFila[] = [];
-
-    rows.forEach((r, idx) => {
-      const numFila = idx + 2; // Considerando fila 1 como encabezado
-      const errores: string[] = [];
-
-      // Normalización de claves (soporta camelCase o snake_case)
-      const fecha = (r['fecha'] || '').trim();
-      const grupo = (r['grupo'] || r['materia'] || '').trim();
-      const inscritos = Number(r['inscritos']);
-      const presentes = Number(r['presentes']);
-      const promedio = Number(r['promedio']);
-      const actProg = Number(r['actividadesProgramadas'] ?? r['actividades_programadas'] ?? 0);
-      const actEnt = Number(r['actividadesEntregadas'] ?? r['actividades_entregadas'] ?? 0);
-
-      // 1. Validación de Fecha ISO
-      if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-        errores.push('Fecha inválida. Debe tener formato YYYY-MM-DD');
-      }
-
-      // 2. Validación de Grupo / Materia
-      if (!grupo || grupo.length > 20) {
-        errores.push('Grupo/Materia es obligatorio y no debe superar 20 caracteres');
-      }
-
-      // 3. Validación de Inscritos
-      if (isNaN(inscritos) || inscritos <= 0) {
-        errores.push('Alumnos inscritos debe ser un número entero mayor a 0');
-      }
-
-      // 4. Validación de Presentes vs Inscritos
-      if (isNaN(presentes) || presentes < 0) {
-        errores.push('Presentes debe ser un número mayor o igual a 0');
-      } else if (!isNaN(inscritos) && presentes > inscritos) {
-        errores.push(`Presentes (${presentes}) no puede superar el total de inscritos (${inscritos})`);
-      }
-
-      // 5. Validación de Promedio (0 a 100)
-      if (isNaN(promedio) || promedio < 0 || promedio > 100) {
-        errores.push(`Promedio (${promedio}) fuera de rango permitido (0 - 100)`);
-      }
-
-      // 6. Validación de Actividades Programadas y Entregadas
-      if (isNaN(actProg) || actProg < 0) {
-        errores.push('Actividades programadas debe ser >= 0');
-      }
-      if (isNaN(actEnt) || actEnt < 0) {
-        errores.push('Actividades entregadas debe ser >= 0');
-      } else if (!isNaN(actProg) && actEnt > actProg) {
-        errores.push(`Actividades entregadas (${actEnt}) supera las programadas (${actProg})`);
-      }
-
-      const itemValido: IndicadorAcademico = {
-        fecha,
-        grupo,
-        inscritos,
-        presentes,
-        promedio: Number(promedio.toFixed(2)),
-        actividadesProgramadas: actProg,
-        actividadesEntregadas: actEnt,
-        origen: 'csv'
-      };
-
-      const resultado: ValidacionCsvFila = {
-        fila: numFila,
-        data: r,
-        esValida: errores.length === 0,
-        errores,
-        indicador: errores.length === 0 ? itemValido : undefined
-      };
-
-      todasLasFilas.push(resultado);
-
-      if (resultado.esValida && resultado.indicador) {
-        filasValidas.push(resultado.indicador);
-      } else {
-        filasConError.push(resultado);
-      }
+  procesarTextoCsv(text: string): {filasValidas: IndicadorAcademico[]; filasConError: ValidacionCsvFila[]} {
+    const rows=this.parse(text);
+    if (!rows.length) throw new Error('CSV vacío');
+    const headers=rows.shift()!.map(v=>v.trim().toLowerCase());
+    const required=['fecha','grupo','inscritos','presentes','promedio','actividadesprogramadas','actividadesentregadas'];
+    const missing=required.filter(h=>!headers.includes(h));
+    if (missing.length) throw new Error('Faltan columnas: '+missing.join(', '));
+    const valid: IndicadorAcademico[]=[]; const invalid: ValidacionCsvFila[]=[];
+    rows.forEach((cells,index)=>{
+      const get=(key:string)=> (cells[headers.indexOf(key)] || '').trim();
+      const number=(key:string)=>get(key)===''?NaN:Number(get(key));
+      const fecha=get('fecha'), grupo=get('grupo');
+      const inscritos=number('inscritos'), presentes=number('presentes'), promedio=number('promedio');
+      const actividadesProgramadas=number('actividadesprogramadas'), actividadesEntregadas=number('actividadesentregadas');
+      const errors:string[]=[];
+      const date=new Date(fecha+'T12:00:00Z');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0,10)!==fecha) errors.push('Fecha inválida');
+      if (!grupo || grupo.length>20) errors.push('Grupo inválido (1 a 20 caracteres)');
+      if (!Number.isInteger(inscritos) || inscritos<=0 || inscritos>65535) errors.push('Inscritos inválidos');
+      if (!Number.isInteger(presentes) || presentes<0 || presentes>inscritos) errors.push('Presentes inválidos');
+      if (!Number.isFinite(promedio) || promedio<0 || promedio>100) errors.push('Promedio fuera de rango');
+      if (!Number.isInteger(actividadesProgramadas) || actividadesProgramadas<0 || actividadesProgramadas>65535) errors.push('Actividades programadas inválidas');
+      if (!Number.isInteger(actividadesEntregadas) || actividadesEntregadas<0 || actividadesEntregadas>actividadesProgramadas) errors.push('Actividades entregadas inválidas');
+      if (errors.length) invalid.push({fila:index+2, errores:errors});
+      else valid.push({id:0,fecha,grupo,inscritos,presentes,promedio,actividadesProgramadas,actividadesEntregadas,origen:'csv'});
     });
-
-    return { filasValidas, filasConError, todasLasFilas };
+    return {filasValidas:valid, filasConError:invalid};
   }
 
-  /**
-   * Exporta un arreglo de registros a un archivo CSV descargable
-   */
-  exportarCsv(indicadores: IndicadorAcademico[], nombreArchivo = 'indicadores_academicos.csv'): void {
-    const csvContent = Papa.unparse(indicadores.map(i => ({
-      fecha: i.fecha,
-      grupo: i.grupo,
-      inscritos: i.inscritos,
-      presentes: i.presentes,
-      promedio: i.promedio,
-      actividadesProgramadas: i.actividadesProgramadas,
-      actividadesEntregadas: i.actividadesEntregadas,
-      origen: i.origen || 'manual'
-    })));
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', nombreArchivo);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  exportarCsv(items: IndicadorAcademico[], filename: string): void {
+    const headers=['fecha','grupo','inscritos','presentes','promedio','actividadesProgramadas','actividadesEntregadas','origen'];
+    const quote=(value: unknown): string => '"'+String(value ?? '').replace(/"/g,'""')+'"';
+    const content=[headers.join(','),...items.map(item=>headers.map(k=>quote((item as any)[k])).join(','))].join('\r\n');
+    const url=URL.createObjectURL(new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'}));
+    const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
   }
 }

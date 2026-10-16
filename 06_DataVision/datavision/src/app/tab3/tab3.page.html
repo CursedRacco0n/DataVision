@@ -36,21 +36,7 @@
           <ion-icon name="school-outline"></ion-icon> Materia / Grupo
         </ion-label>
         <ion-item lines="none" class="custom-item">
-          <ion-select
-            [(ngModel)]="grupo"
-            interface="action-sheet"
-            placeholder="Selecciona materia"
-            aria-label="Materia o Grupo"
-          >
-            <ion-select-option value="Maths">Maths</ion-select-option>
-            <ion-select-option value="English">English</ion-select-option>
-            <ion-select-option value="Physics">Physics</ion-select-option>
-            <ion-select-option value="Chemistry">Chemistry</ion-select-option>
-            <ion-select-option value="Biology">Biology</ion-select-option>
-            <ion-select-option value="2A">Grupo 2A</ion-select-option>
-            <ion-select-option value="2B">Grupo 2B</ion-select-option>
-            <ion-select-option value="2C">Grupo 2C</ion-select-option>
-          </ion-select>
+          <ion-input type="text" [(ngModel)]="grupo" maxlength="20" required placeholder="Escribe materia o grupo" aria-label="Materia o Grupo"></ion-input>
         </ion-item>
       </div>
 
@@ -82,7 +68,7 @@
               <ion-item
                 lines="none"
                 class="custom-item"
-                [class.item-error]="presentes > inscritos"
+                [class.item-error]="presentes !== null && inscritos !== null && presentes > inscritos"
               >
                 <ion-input
                   type="number"
@@ -98,7 +84,7 @@
         </ion-row>
       </ion-grid>
 
-      <ion-note *ngIf="presentes > inscritos" color="danger" class="error-note">
+      <ion-note *ngIf="presentes !== null && inscritos !== null && presentes > inscritos" color="danger" class="error-note">
         Alumnos presentes ({{ presentes }}) no puede superar a los inscritos ({{ inscritos }}).
       </ion-note>
 
@@ -152,7 +138,7 @@
               <ion-item
                 lines="none"
                 class="custom-item"
-                [class.item-error]="actividadesEntregadas > actividadesProgramadas"
+                [class.item-error]="actividadesEntregadas !== null && actividadesProgramadas !== null && actividadesEntregadas > actividadesProgramadas"
               >
                 <ion-input
                   type="number"

@@ -96,7 +96,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
   private subs = new Subscription();
 
   // Filtros interactivos
-  filtroAnio: string = '2026';
+  filtroAnio: string = 'todos';
   filtroMes: string = 'todos';
   filtroGrupo: string = 'todos';
 
@@ -116,6 +116,10 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
 
   datosFiltrados: IndicadorAcademico[] = [];
   isOnline = false;
+  cargando = false;
+  errorCarga = '';
+  aniosDisponibles: string[] = [];
+  gruposDisponibles: string[] = [];
 
   constructor(
     private dataService: DataService,
@@ -148,6 +152,9 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
         this.isOnline = online;
       })
     );
+    this.subs.add(this.dataService.error$.subscribe(error => { this.errorCarga = error; }));
+    this.subs.add(this.dataService.loading$.subscribe(value => { this.cargando = value; }));
+    void this.recargarDatos();
   }
 
   ngAfterViewInit(): void {
@@ -188,14 +195,21 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async recargarDatos(event?: any): Promise<void> {
-    await this.dataService.cargarDesdeBackend();
-    this.actualizarVista();
-    if (event) {
-      event.target.complete();
+    try {
+      await this.dataService.cargarDesdeBackend();
+      this.actualizarVista();
+    } finally {
+      event?.target?.complete();
     }
   }
 
   private actualizarVista(): void {
+    const todos = this.dataService.todos;
+    this.aniosDisponibles = [...new Set(todos.map(d => d.fecha.slice(0, 4)))].sort();
+    this.gruposDisponibles = [...new Set(todos.map(d => d.grupo))].sort();
+    if (this.filtroAnio !== 'todos' && !this.aniosDisponibles.includes(this.filtroAnio)) this.filtroAnio = 'todos';
+    if (this.filtroGrupo !== 'todos' && !this.gruposDisponibles.includes(this.filtroGrupo)) this.filtroGrupo = 'todos';
+    this.dataService.setFiltros({ anio: this.filtroAnio, mes: this.filtroMes, grupo: this.filtroGrupo });
     this.datosFiltrados = this.dataService.obtenerDatosFiltrados();
     this.kpis = this.dataService.calcularKpis(this.datosFiltrados);
     this.renderizarTodasLasGraficas();
@@ -231,6 +245,8 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     const asistenciaPorMes: number[] = new Array(12).fill(0);
     const testPorMes: number[] = new Array(12).fill(0);
     const conteoMes: number[] = new Array(12).fill(0);
+    const presentesPorMes = new Array(12).fill(0);
+    const inscritosPorMes = new Array(12).fill(0);
 
     // Agrupar por mes
     for (const d of this.datosFiltrados) {
@@ -239,7 +255,8 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
         const mesIdx = parseInt(parts[1], 10) - 1;
         if (mesIdx >= 0 && mesIdx < 12) {
           const asistenciaPct = d.inscritos > 0 ? (d.presentes / d.inscritos) * 100 : 0;
-          asistenciaPorMes[mesIdx] += asistenciaPct;
+          presentesPorMes[mesIdx] += d.presentes;
+          inscritosPorMes[mesIdx] += d.inscritos;
           testPorMes[mesIdx] += Number(d.promedio);
           conteoMes[mesIdx]++;
         }
@@ -249,7 +266,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     // Promediar
     for (let i = 0; i < 12; i++) {
       if (conteoMes[i] > 0) {
-        asistenciaPorMes[i] = Number((asistenciaPorMes[i] / conteoMes[i]).toFixed(1));
+        asistenciaPorMes[i] = inscritosPorMes[i] ? Number((100 * presentesPorMes[i] / inscritosPorMes[i]).toFixed(1)) : 0;
         testPorMes[i] = Number((testPorMes[i] / conteoMes[i]).toFixed(1));
       }
     }
@@ -345,7 +362,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
       const groupCounts = new Map<string, number>();
       for (const d of this.datosFiltrados) {
         const g = d.grupo || 'General';
-        groupCounts.set(g, (groupCounts.get(g) || 0) + (d.actividadesEntregadas || 1));
+        groupCounts.set(g, (groupCounts.get(g) || 0) + d.actividadesEntregadas);
       }
 
       const colors = ['#0d9488', '#38bdf8', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981'];
@@ -430,11 +447,19 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     // Ordenar fechas cronológicamente
     const ordenados = [...this.datosFiltrados].sort((a, b) => a.fecha.localeCompare(b.fecha));
 
-    const fechas = ordenados.map((d) => d.fecha.substring(5)); // Formato MM-DD
-    const promedios = ordenados.map((d) => d.promedio);
-    const asistencias = ordenados.map((d) =>
-      d.inscritos > 0 ? Number(((d.presentes / d.inscritos) * 100).toFixed(1)) : 0
-    );
+    // Agregar registros de varios grupos en la misma fecha (sin puntos duplicados).
+    const porFecha = new Map<string, { sumaPromedio: number; registros: number; inscritos: number; presentes: number }>();
+    for (const d of ordenados) {
+      const a = porFecha.get(d.fecha) || { sumaPromedio: 0, registros: 0, inscritos: 0, presentes: 0 };
+      a.sumaPromedio += d.promedio;
+      a.registros += 1;
+      a.inscritos += d.inscritos;
+      a.presentes += d.presentes;
+      porFecha.set(d.fecha, a);
+    }
+    const fechas = [...porFecha.keys()];
+    const promedios = [...porFecha.values()].map(v => Number((v.sumaPromedio / v.registros).toFixed(1)));
+    const asistencias = [...porFecha.values()].map(v => v.inscritos ? Number((100 * v.presentes / v.inscritos).toFixed(1)) : 0);
 
     const option: echarts.EChartsOption = {
       tooltip: {
