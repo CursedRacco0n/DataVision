@@ -12,9 +12,10 @@ export interface IndicadorAcademico {
 
 export interface ResumenKpis {
   totalRegistros: number;
-  asistenciaPonderada: number;
-  promedioGlobal: number;
-  tasaEntregas: number;
+  asistenciaPonderada: number; // % Asistencia = 100 * SUM(presentes) / SUM(inscritos)
+  promedioGlobal: number; // AVG(promedio)
+  tasaEntregas: number; // % Entregas = 100 * SUM(entregadas) / SUM(programadas)
+  tasaAprobacion: number; // % Aprobación = 100 * registros con promedio >= nota mínima / total registros
   totalInscritos: number;
   totalPresentes: number;
   totalAusentes: number;

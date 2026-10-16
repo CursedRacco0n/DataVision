@@ -88,10 +88,12 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('barChartContainer') barChartElement!: ElementRef<HTMLDivElement>;
   @ViewChild('pieChartContainer') pieChartElement!: ElementRef<HTMLDivElement>;
   @ViewChild('lineChartContainer') lineChartElement!: ElementRef<HTMLDivElement>;
+  @ViewChild('miniChartContainer') miniChartElement!: ElementRef<HTMLDivElement>;
 
   private barChart?: echarts.ECharts;
   private pieChart?: echarts.ECharts;
   private lineChart?: echarts.ECharts;
+  private miniChart?: echarts.ECharts;
 
   private subs = new Subscription();
 
@@ -109,6 +111,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     asistenciaPonderada: 0,
     promedioGlobal: 0,
     tasaEntregas: 0,
+    tasaAprobacion: 0,
     totalInscritos: 0,
     totalPresentes: 0,
     totalAusentes: 0
@@ -178,6 +181,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     this.barChart?.dispose();
     this.pieChart?.dispose();
     this.lineChart?.dispose();
+    this.miniChart?.dispose();
   }
 
   onFiltroChange(): void {
@@ -226,50 +230,63 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     if (this.lineChartElement?.nativeElement && !this.lineChart) {
       this.lineChart = echarts.init(this.lineChartElement.nativeElement);
     }
+    // Vista previa móvil: solo inicializar si es visible (pantallas >= 992px)
+    const miniEl = this.miniChartElement?.nativeElement;
+    if (miniEl && !this.miniChart && miniEl.offsetWidth) {
+      this.miniChart = echarts.init(miniEl);
+    }
   }
 
   private renderizarTodasLasGraficas(): void {
     this.renderBarChart();
     this.renderPieChart();
     this.renderLineChart();
+    this.renderMiniChart();
   }
 
-  /**
-   * Tarjeta 1: "Monthly Progress"
-   * Gráfica de barras agrupadas: "Attendance" (#38bdf8 / #2dd4bf) y "Progress Test" (#8b5cf6)
-   */
-  private renderBarChart(): void {
-    if (!this.barChart) return;
+  /** Agregado mensual compartido por la gráfica principal y la vista previa móvil */
+  private agregarPorMes(): { labels: string[]; asistencia: number[]; evaluacion: number[] } {
+    const labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const asistencia: number[] = new Array(12).fill(0);
+    const evaluacion: number[] = new Array(12).fill(0);
+    const conteo: number[] = new Array(12).fill(0);
+    const presentesPorMes: number[] = new Array(12).fill(0);
+    const inscritosPorMes: number[] = new Array(12).fill(0);
 
-    const mesesLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const asistenciaPorMes: number[] = new Array(12).fill(0);
-    const testPorMes: number[] = new Array(12).fill(0);
-    const conteoMes: number[] = new Array(12).fill(0);
-    const presentesPorMes = new Array(12).fill(0);
-    const inscritosPorMes = new Array(12).fill(0);
-
-    // Agrupar por mes
     for (const d of this.datosFiltrados) {
       const parts = d.fecha.split('-');
       if (parts.length >= 2) {
         const mesIdx = parseInt(parts[1], 10) - 1;
         if (mesIdx >= 0 && mesIdx < 12) {
-          const asistenciaPct = d.inscritos > 0 ? (d.presentes / d.inscritos) * 100 : 0;
           presentesPorMes[mesIdx] += d.presentes;
           inscritosPorMes[mesIdx] += d.inscritos;
-          testPorMes[mesIdx] += Number(d.promedio);
-          conteoMes[mesIdx]++;
+          evaluacion[mesIdx] += Number(d.promedio);
+          conteo[mesIdx]++;
         }
       }
     }
 
-    // Promediar
     for (let i = 0; i < 12; i++) {
-      if (conteoMes[i] > 0) {
-        asistenciaPorMes[i] = inscritosPorMes[i] ? Number((100 * presentesPorMes[i] / inscritosPorMes[i]).toFixed(1)) : 0;
-        testPorMes[i] = Number((testPorMes[i] / conteoMes[i]).toFixed(1));
+      if (conteo[i] > 0) {
+        asistencia[i] = inscritosPorMes[i]
+          ? Number((100 * presentesPorMes[i] / inscritosPorMes[i]).toFixed(1))
+          : 0;
+        evaluacion[i] = Number((evaluacion[i] / conteo[i]).toFixed(1));
       }
     }
+
+    return { labels, asistencia, evaluacion };
+  }
+
+  /**
+   * Tarjeta 1: "Progreso Mensual (Asistencia vs Evaluación)"
+   * Gráfica de barras agrupadas: "Asistencia" (#38bdf8) y "Evaluación" (#8b5cf6)
+   */
+  private renderBarChart(): void {
+    if (!this.barChart) return;
+
+    const { labels: mesesLabels, asistencia: asistenciaPorMes, evaluacion: evaluacionPorMes } =
+      this.agregarPorMes();
 
     const option: echarts.EChartsOption = {
       tooltip: {
@@ -318,7 +335,7 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
       },
       series: [
         {
-          name: 'Attendance',
+          name: 'Asistencia',
           type: 'bar',
           data: asistenciaPorMes,
           barGap: '20%',
@@ -331,9 +348,9 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         {
-          name: 'Progress Test',
+          name: 'Evaluación',
           type: 'bar',
-          data: testPorMes,
+          data: evaluacionPorMes,
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: '#a78bfa' },
@@ -346,6 +363,31 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.barChart.setOption(option, true);
+  }
+
+  /** Mini gráfica dentro de la vista previa móvil (mismos datos, versión compacta) */
+  private renderMiniChart(): void {
+    if (!this.miniChart) return;
+
+    const { labels, asistencia, evaluacion } = this.agregarPorMes();
+
+    const option: echarts.EChartsOption = {
+      grid: { top: 8, right: 4, bottom: 18, left: 4 },
+      xAxis: {
+        type: 'category',
+        data: labels,
+        axisLabel: { fontSize: 7, color: '#7a839e' },
+        axisTick: { show: false },
+        axisLine: { show: false }
+      },
+      yAxis: { type: 'value', show: false, min: 0, max: 100 },
+      series: [
+        { type: 'bar', data: asistencia, barGap: '20%', itemStyle: { color: '#38bdf8', borderRadius: 2 } },
+        { type: 'bar', data: evaluacion, itemStyle: { color: '#8b5cf6', borderRadius: 2 } }
+      ]
+    };
+
+    this.miniChart.setOption(option, true);
   }
 
   /**
@@ -543,9 +585,15 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
 
   public resizeCharts(): void {
     setTimeout(() => {
+      // La vista previa móvil está oculta bajo 992px: inicializar al ganar visibilidad
+      if (!this.miniChart && this.miniChartElement?.nativeElement?.offsetWidth) {
+        this.miniChart = echarts.init(this.miniChartElement.nativeElement);
+        this.renderMiniChart();
+      }
       this.barChart?.resize();
       this.pieChart?.resize();
       this.lineChart?.resize();
+      this.miniChart?.resize();
     }, 100);
   }
 }

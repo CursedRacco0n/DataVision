@@ -135,11 +135,15 @@ export class DataService {
     const actividades = sum(d => d.actividadesProgramadas);
     const entregas = sum(d => d.actividadesEntregadas);
     const round = (n: number) => Math.round(n * 10) / 10;
+    const tasaAprobacion = datos.length
+      ? round(100 * datos.filter(d => d.promedio >= 70).length / datos.length)
+      : 0;
     return {
       totalRegistros: datos.length,
       asistenciaPonderada: inscritos ? round(100 * presentes / inscritos) : 0,
       promedioGlobal: datos.length ? round(sum(d => d.promedio) / datos.length) : 0,
       tasaEntregas: actividades ? round(100 * entregas / actividades) : 0,
+      tasaAprobacion,
       totalInscritos: inscritos,
       totalPresentes: presentes,
       totalAusentes: inscritos - presentes

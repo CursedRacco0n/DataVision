@@ -7,24 +7,23 @@
 }
 
 .filters-toolbar {
-  --background: #0b7f74;
+  --background: transparent;
+  --ion-toolbar-background: transparent;
   --min-height: 48px;
-  padding: 4px 10px;
+  padding: 4px 16px;
 
   .filters-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
-    overflow-x: auto;
+    width: 100%;
     padding-bottom: 2px;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
   }
 
   .filter-item {
     display: flex;
     align-items: center;
+    min-width: 0;
     background: rgba(255, 255, 255, 0.16);
     backdrop-filter: blur(8px);
     border-radius: 20px;
@@ -43,6 +42,8 @@
       font-size: 0.78rem;
       font-weight: 600;
       min-height: 32px;
+      min-width: 0;
+      width: 100%;
     }
   }
 }
@@ -130,10 +131,14 @@
 }
 
 .chart-card {
+  width: calc(100% - 12px);
+  margin: 10px 6px;
+
   .card-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     width: 100%;
 
     ion-segment {
@@ -150,3 +155,202 @@
 .data-table { width: 100%; border-collapse: collapse; min-width: 650px; font-size: 0.85rem; }
 .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
 .data-table th { color: #475569; background: #f8fafc; }
+
+.dashboard-layout {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px 16px;
+}
+
+.dashboard-main {
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-main > ion-grid {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.preview-col {
+  position: sticky;
+  top: 12px;
+  padding: 12px 8px;
+}
+
+.preview-card {
+  padding: 18px 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+
+  h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1rem;
+  }
+
+  > p {
+    margin: 4px 0 14px;
+    color: #64748b;
+    font-size: 0.78rem;
+  }
+}
+
+.phone-frame {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 10px;
+  border: 5px solid #1e293b;
+  border-radius: 36px;
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+}
+
+.phone-screen {
+  min-height: 470px;
+  overflow: hidden;
+  border-radius: 25px;
+  background: #f4f6f9;
+}
+
+.phone-notch {
+  width: 76px;
+  height: 14px;
+  margin: 0 auto;
+  border-radius: 0 0 10px 10px;
+  background: #1e293b;
+}
+
+.phone-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px;
+  background: linear-gradient(105deg, #0d9488 0%, #0f766e 52%, #1e3159 100%);
+  color: #ffffff;
+}
+
+.phone-brand {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.phone-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.phone-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+}
+
+.phone-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #ffffff;
+
+  span {
+    color: #64748b;
+    font-size: 0.58rem;
+    font-weight: 700;
+  }
+
+  strong {
+    color: #0f172a;
+    font-size: 1rem;
+  }
+}
+
+.phone-chart-card {
+  margin: 0 12px 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.phone-chart-title {
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mini-echarts-box {
+  width: 100%;
+  height: 190px;
+}
+
+@media (max-width: 900px) {
+  .preview-col {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .filters-toolbar {
+    padding-inline: 8px;
+
+    .filters-container {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-item {
+      padding-inline: 7px;
+
+      ion-select {
+        font-size: 0.7rem;
+      }
+    }
+  }
+
+  .kpi-grid {
+    padding: 6px 2px 4px;
+
+    ion-col {
+      padding: 4px;
+    }
+  }
+
+  .kpi-card {
+    padding: 10px;
+    gap: 7px;
+
+    .kpi-info .kpi-value {
+      font-size: 1.2rem;
+    }
+  }
+
+  .chart-card {
+    .card-header-flex {
+      flex-wrap: wrap;
+      align-items: flex-start;
+
+      ion-segment {
+        width: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 380px) {
+  .filters-toolbar .filters-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kpi-grid ion-col {
+    --ion-grid-column-size: 100%;
+  }
+}
