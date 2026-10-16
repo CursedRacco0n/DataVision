@@ -50,7 +50,7 @@ export class CsvService {
       if (!Number.isFinite(promedio) || promedio<0 || promedio>100) errors.push('Promedio fuera de rango');
       if (!Number.isInteger(actividadesProgramadas) || actividadesProgramadas<0 || actividadesProgramadas>65535) errors.push('Actividades programadas inválidas');
       if (!Number.isInteger(actividadesEntregadas) || actividadesEntregadas<0 || actividadesEntregadas>actividadesProgramadas) errors.push('Actividades entregadas inválidas');
-      if (errors.length) invalid.push({fila:index+2, errores:errors});
+      if (errors.length) invalid.push({fila:index+2, errores:errors, data: Object.fromEntries(headers.map((header, i) => [header, cells[i] ?? ""]))});
       else valid.push({id:0,fecha,grupo,inscritos,presentes,promedio,actividadesProgramadas,actividadesEntregadas,origen:'csv'});
     });
     return {filasValidas:valid, filasConError:invalid};

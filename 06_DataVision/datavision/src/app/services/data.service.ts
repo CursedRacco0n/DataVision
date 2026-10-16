@@ -28,7 +28,7 @@ export class DataService {
     this.errorSubject.next('');
     try {
       // Traer el conjunto completo para que los filtros y sus opciones siempre reflejen la BD.
-      const response = await firstValueFrom(this.http.get<IndicadoresResponse>(this.api.url('indicadores/list.php')));
+      const response = await firstValueFrom(this.http.get<IndicadoresResponse>(this.api.url('indicadores/list.php') + '?_=' + Date.now()));
       if (!response?.ok || !Array.isArray(response.items)) {
         throw new Error(response?.error || 'Respuesta inválida del servidor');
       }
@@ -60,12 +60,24 @@ export class DataService {
 
   async agregarIndicador(item: Omit<IndicadorAcademico, 'id'>): Promise<{ok: boolean; error?: string}> {
     try {
-      const res = await firstValueFrom(this.http.post<{ok: boolean; error?: string}>(this.api.url('indicadores/create.php'), item));
-      if (res.ok) {
-        const actualizado = await this.cargarDesdeBackend();
-        if (!actualizado) return {ok: false, error: 'MySQL guardó el registro pero no se pudo actualizar la lista: ' + this.errorSubject.value};
+      const res = await firstValueFrom(this.http.post<{ok: boolean; id?: number; error?: string}>(
+        this.api.url('indicadores/create.php'), item));
+      if (!res?.ok || !Number.isInteger(Number(res.id)) || Number(res.id) <= 0) {
+        return {ok: false, error: res?.error || 'La API no confirmó el ID del registro.'};
       }
-      return res;
+      const id = Number(res.id);
+      // Confirmación independiente: la fila debe poder consultarse por el mismo backend.
+      const checked = await firstValueFrom(this.http.get<IndicadoresResponse>(
+        this.api.url('indicadores/list.php') + '?id=' + id + '&_=' + Date.now()));
+      if (!checked?.ok || !Array.isArray(checked.items) || !checked.items.some(r => Number(r.id) === id)) {
+        await this.cargarDesdeBackend();
+        return {ok: false, error: 'La API devolvió éxito, pero el registro no aparece en la base de datos consultada. Verifica URL, puerto y base de datos.'};
+      }
+      const actualizado = await this.cargarDesdeBackend();
+      if (!actualizado || !this.todos.some(r => r.id === id)) {
+        return {ok: false, error: 'Se confirmó la inserción, pero no fue posible mostrarla en la lista actual. Revisa el servidor y vuelve a consultar.'};
+      }
+      return {ok: true};
     } catch (e: any) {
       return {ok: false, error: this.errorMensaje(e)};
     }

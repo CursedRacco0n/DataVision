@@ -27,4 +27,4 @@ export interface IndicadoresResponse {
   error?: string;
 }
 
-export interface ValidacionCsvFila { fila: number; errores: string[]; }
+export interface ValidacionCsvFila { fila: number; errores: string[]; data: Record<string, string>; }

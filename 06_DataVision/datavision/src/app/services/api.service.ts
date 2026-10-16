@@ -7,17 +7,18 @@ import { API_BASE_URL } from '../config/api.config';
 export class ApiService {
   private baseUrl = API_BASE_URL;
   constructor(private http: HttpClient) {
-    try { this.baseUrl = localStorage.getItem('datavision_api_url') || API_BASE_URL; } catch {}
+    // Usar una única API configurada; evitar URLs antiguas persistidas en localStorage.
+    this.baseUrl = API_BASE_URL;
   }
   getBaseUrl(): string { return this.baseUrl; }
   setBaseUrl(value: string): void {
     const url = value.trim().replace(/\/+$/, '');
     if (!/^https?:\/\/[^\s]+$/i.test(url)) throw new Error('Introduce una URL HTTP(S) válida');
     this.baseUrl = url;
-    try { localStorage.setItem('datavision_api_url', url); } catch {}
+    // URL configurable durante esta sesión; no persistir hacia servidores anteriores.
   }
   url(path: string): string { return `${this.baseUrl}/${path.replace(/^\/+/, '')}`; }
-  checkHealth(): Promise<{ok: boolean; service?: string; database?: string; error?: string}> {
-    return firstValueFrom(this.http.get<{ok: boolean; service?: string; database?: string; error?: string}>(this.url('health.php')));
+  checkHealth(): Promise<{ok: boolean; service?: string; database?: string; total_registros?: number; api_version?: string; error?: string}> {
+    return firstValueFrom(this.http.get<{ok: boolean; service?: string; database?: string; total_registros?: number; api_version?: string; error?: string}>(this.url('health.php')));
   }
 }

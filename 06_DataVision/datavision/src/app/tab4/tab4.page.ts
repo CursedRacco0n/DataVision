@@ -153,7 +153,7 @@ export class Tab4Page implements OnInit, OnDestroy {
       const res = await this.apiService.checkHealth();
       if (res.ok) {
         this.estadoConexion = 'conectado';
-        this.mensajeEstado = `Servicio: ${res.service || 'api'} · BD: ${res.database || 'conectada'}`;
+        this.mensajeEstado = `Servicio: ${res.service || 'api'} · BD: ${res.database || 'desconocida'} · Registros: ${res.total_registros ?? '?'} · Versión: ${res.api_version || 'antigua'}`;
         this.lanzarToast('Conexión exitosa con API PHP y base de datos MySQL', 'success');
       } else {
         this.estadoConexion = 'desconectado';
