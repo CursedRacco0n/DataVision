@@ -39,11 +39,17 @@ body {
 }
 
 /* Header & Toolbars */
+ion-header {
+  background: linear-gradient(105deg, #0d9488 0%, #0f766e 52%, #1e3159 100%);
+  box-shadow: 0 4px 12px rgba(13, 37, 74, 0.2);
+}
+
 ion-header ion-toolbar {
-  --background: #0d9488;
+  --background: transparent;
+  --ion-toolbar-background: transparent;
   --color: #ffffff;
   --border-width: 0;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  box-shadow: none;
 
   ion-title {
     font-family: var(--app-heading-font);
@@ -60,6 +66,10 @@ ion-header ion-toolbar {
   ion-button {
     --color: #ffffff;
   }
+}
+
+ion-header ion-toolbar::part(background) {
+  background: transparent !important;
 }
 
 /* Content Area */

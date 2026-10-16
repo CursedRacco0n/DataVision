@@ -1,6 +1,6 @@
 <ion-header class="ion-no-border">
   <ion-toolbar color="primary">
-    <ion-title>Progress Analytics</ion-title>
+    <ion-title>DataVision</ion-title>
     <ion-badge slot="end" [color]="isOnline ? 'success' : 'warning'" class="header-status-badge">
       {{ isOnline ? 'MySQL Conectado' : 'Sin conexión' }}
     </ion-badge>
@@ -73,132 +73,158 @@
   <div class="api-message" *ngIf="cargando">Cargando registros de MySQL...</div>
   <div class="api-message api-error" *ngIf="errorCarga" role="alert">{{ errorCarga }}</div>
   <div class="api-message" *ngIf="!cargando && !errorCarga && !datosFiltrados.length">No hay registros para los filtros seleccionados.</div>
+  <div class="dashboard-layout">
+    <!-- ============ Columna principal ============ -->
+    <div class="dashboard-main">
 
-  <!-- Tarjetas Resumen KPIs -->
-  <ion-grid class="kpi-grid">
-    <ion-row>
-      <ion-col size="6" size-md="3">
-        <div class="kpi-card teal-accent">
-          <div class="kpi-icon-wrap teal-bg">
-            <ion-icon name="people-outline"></ion-icon>
-          </div>
-          <div class="kpi-info">
-            <span class="kpi-label">Asistencia</span>
-            <h2 class="kpi-value">{{ kpis.asistenciaPonderada }}%</h2>
-            <ion-progress-bar [value]="kpis.asistenciaPonderada / 100" color="primary"></ion-progress-bar>
-          </div>
-        </div>
-      </ion-col>
+      <!-- KPIs: REGISTROS → PROMEDIO → ASISTENCIA → APROBACIÓN -->
+      <ion-grid class="kpi-grid">
+        <ion-row>
+          <ion-col size="6" size-md="3">
+            <div class="kpi-card sky-accent">
+              <div class="kpi-icon-wrap sky-bg">
+                <ion-icon name="bar-chart-outline"></ion-icon>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Registros</span>
+                <h2 class="kpi-value">{{ kpis.totalRegistros }}</h2>
+                <span class="kpi-subtext">{{ datosFiltrados.length }} filtrados</span>
+              </div>
+            </div>
+          </ion-col>
 
-      <ion-col size="6" size-md="3">
-        <div class="kpi-card purple-accent">
-          <div class="kpi-icon-wrap purple-bg">
-            <ion-icon name="ribbon-outline"></ion-icon>
-          </div>
-          <div class="kpi-info">
-            <span class="kpi-label">Promedio</span>
-            <h2 class="kpi-value">{{ kpis.promedioGlobal }}</h2>
-            <span class="kpi-subtext">Escala 0 - 100</span>
-          </div>
-        </div>
-      </ion-col>
+          <ion-col size="6" size-md="3">
+            <div class="kpi-card purple-accent">
+              <div class="kpi-icon-wrap purple-bg">
+                <ion-icon name="ribbon-outline"></ion-icon>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Promedio</span>
+                <h2 class="kpi-value">{{ kpis.promedioGlobal }}</h2>
+                <span class="kpi-subtext">Escala 0 - 100</span>
+              </div>
+            </div>
+          </ion-col>
 
-      <ion-col size="6" size-md="3">
-        <div class="kpi-card sky-accent">
-          <div class="kpi-icon-wrap sky-bg">
-            <ion-icon name="bar-chart-outline"></ion-icon>
+          <ion-col size="6" size-md="3">
+            <div class="kpi-card teal-accent">
+              <div class="kpi-icon-wrap teal-bg">
+                <ion-icon name="people-outline"></ion-icon>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Asistencia</span>
+                <h2 class="kpi-value">{{ kpis.asistenciaPonderada }}%</h2>
+                <ion-progress-bar [value]="kpis.asistenciaPonderada / 100" color="primary"></ion-progress-bar>
+              </div>
+            </div>
+          </ion-col>
+
+          <ion-col size="6" size-md="3">
+            <div class="kpi-card amber-accent">
+              <div class="kpi-icon-wrap amber-bg">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Aprobación</span>
+                <h2 class="kpi-value">{{ kpis.tasaAprobacion }}%</h2>
+                <span class="kpi-subtext">Asignaturas aprobadas</span>
+              </div>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <!-- Tarjeta 1: Progreso Mensual -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <div class="card-header-flex">
+            <div>
+              <ion-card-title>Progreso Mensual (Asistencia vs Evaluación)</ion-card-title>
+              <ion-card-subtitle>
+                Comparativo por mes · {{ filtroAnio === 'todos' ? 'Todos los años' : 'Año ' + filtroAnio }}
+              </ion-card-subtitle>
+            </div>
+            <span class="badge-pill badge-teal">{{ filtroAnio === 'todos' ? 'Todos' : filtroAnio }}</span>
           </div>
-          <div class="kpi-info">
-            <span class="kpi-label">Registros</span>
-            <h2 class="kpi-value">{{ kpis.totalRegistros }}</h2>
-            <span class="kpi-subtext">{{ datosFiltrados.length }} filtrados</span>
+        </ion-card-header>
+        <ion-card-content>
+          <div #barChartContainer class="echarts-box"></div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Tarjeta 2: Distribución por Materia -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <div class="card-header-flex">
+            <div>
+              <ion-card-title>Subject Time Per Token</ion-card-title>
+              <ion-card-subtitle>Distribución Académica y Asistencia</ion-card-subtitle>
+            </div>
+            <ion-segment [value]="pieMode" (ionChange)="cambiarModoPie($any($event.detail.value))" mode="ios">
+              <ion-segment-button value="materias">
+                <ion-label>Materias</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="asistencia">
+                <ion-label>Pres/Aus</ion-label>
+              </ion-segment-button>
+            </ion-segment>
           </div>
-        </div>
-      </ion-col>
+        </ion-card-header>
+        <ion-card-content>
+          <div #pieChartContainer class="echarts-box"></div>
+        </ion-card-content>
+      </ion-card>
 
-      <ion-col size="6" size-md="3">
-        <div class="kpi-card amber-accent">
-          <div class="kpi-icon-wrap amber-bg">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <!-- Tarjeta 3: Evolución y Tendencia -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <div class="card-header-flex">
+            <div>
+              <ion-card-title>Evolución y Tendencia Académica</ion-card-title>
+              <ion-card-subtitle>Trayectoria histórica de calificaciones y asistencia</ion-card-subtitle>
+            </div>
+            <span class="badge-pill badge-purple">Tendencia</span>
           </div>
-          <div class="kpi-info">
-            <span class="kpi-label">Entregas</span>
-            <h2 class="kpi-value">{{ kpis.tasaEntregas }}%</h2>
-            <span class="kpi-subtext">Cumplimiento</span>
+        </ion-card-header>
+        <ion-card-content>
+          <div #lineChartContainer class="echarts-box"></div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <ion-card-title>Registros obtenidos de MySQL</ion-card-title>
+          <ion-card-subtitle>{{ datosFiltrados.length }} registros según los filtros</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Grupo</th>
+                  <th>Inscritos</th>
+                  <th>Presentes</th>
+                  <th>Promedio</th>
+                  <th>Actividades entregadas</th>
+                  <th>Origen</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of datosFiltrados">
+                  <td>{{ item.fecha }}</td>
+                  <td>{{ item.grupo }}</td>
+                  <td>{{ item.inscritos }}</td>
+                  <td>{{ item.presentes }}</td>
+                  <td>{{ item.promedio }}</td>
+                  <td>{{ item.actividadesEntregadas }}/{{ item.actividadesProgramadas }}</td>
+                  <td>{{ item.origen }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </div>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
-  <!-- Tarjeta 1: "Monthly Progress" -->
-  <ion-card class="chart-card">
-    <ion-card-header>
-      <div class="card-header-flex">
-        <div>
-          <ion-card-title>Monthly Progress</ion-card-title>
-          <ion-card-subtitle>Attendance vs Progress Test</ion-card-subtitle>
-        </div>
-        <span class="badge-pill badge-teal">{{ filtroAnio }}</span>
-      </div>
-    </ion-card-header>
-    <ion-card-content>
-      <div #barChartContainer class="echarts-box"></div>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Tarjeta 2: "Subject Time Per Token" / "Distribución por Materia" -->
-  <ion-card class="chart-card">
-    <ion-card-header>
-      <div class="card-header-flex">
-        <div>
-          <ion-card-title>Distribución por grupo</ion-card-title>
-          <ion-card-subtitle>Distribución Académica y Asistencia</ion-card-subtitle>
-        </div>
-        <ion-segment [value]="pieMode" (ionChange)="cambiarModoPie($any($event.detail.value))" mode="ios">
-          <ion-segment-button value="materias">
-            <ion-label>Grupos</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="asistencia">
-            <ion-label>Pres/Aus</ion-label>
-          </ion-segment-button>
-        </ion-segment>
-      </div>
-    </ion-card-header>
-    <ion-card-content>
-      <div #pieChartContainer class="echarts-box"></div>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Tarjeta 3: "Evolución y Tendencia Académica" -->
-  <ion-card class="chart-card">
-    <ion-card-header>
-      <div class="card-header-flex">
-        <div>
-          <ion-card-title>Evolución y Tendencia Académica</ion-card-title>
-          <ion-card-subtitle>Trayectoria histórica de calificaciones y asistencia</ion-card-subtitle>
-        </div>
-        <span class="badge-pill badge-purple">Tendencia</span>
-      </div>
-    </ion-card-header>
-    <ion-card-content>
-      <div #lineChartContainer class="echarts-box"></div>
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card class="chart-card">
-    <ion-card-header><ion-card-title>Registros obtenidos de MySQL</ion-card-title>
-      <ion-card-subtitle>{{ datosFiltrados.length }} registros según los filtros</ion-card-subtitle></ion-card-header>
-    <ion-card-content>
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead><tr><th>Fecha</th><th>Grupo</th><th>Inscritos</th><th>Presentes</th><th>Promedio</th><th>Actividades entregadas</th><th>Origen</th></tr></thead>
-          <tbody><tr *ngFor="let item of datosFiltrados">
-            <td>{{ item.fecha }}</td><td>{{ item.grupo }}</td><td>{{ item.inscritos }}</td><td>{{ item.presentes }}</td><td>{{ item.promedio }}</td>
-            <td>{{ item.actividadesEntregadas }}/{{ item.actividadesProgramadas }}</td><td>{{ item.origen }}</td>
-          </tr></tbody>
-        </table>
-      </div>
-    </ion-card-content>
-  </ion-card>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
 </ion-content>
