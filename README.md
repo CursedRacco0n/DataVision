@@ -13,6 +13,10 @@ Todo el código fuente se encuentra en la carpeta [`06_DataVision/`](./06_DataVi
 
 ---
 
+## Instalacion del proyecto
+Para poder correr el proyecto de manera correcta, se debe de mover la carpeta "backend_starter" dentro de la carpeta Htdocs
+Copiar el esquema de base de datos del archivo schema.sql a Mysql/MariaBD
+
 ## 🌐 Trabajo Colaborativo en Equipo (Sin mover puertos de XAMPP)
 
 ### 1. Autodetección de Puertos MySQL
