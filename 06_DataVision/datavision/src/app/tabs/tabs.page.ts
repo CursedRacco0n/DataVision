@@ -1,7 +1,7 @@
 import { Component, EnvironmentInjector, inject } from '@angular/core';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { statsChartOutline, cloudUploadOutline, addCircleOutline, serverOutline } from 'ionicons/icons';
+import { statsChartOutline, cloudUploadOutline, addCircleOutline, serverOutline, gitCompareOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-tabs',
@@ -17,7 +17,8 @@ export class TabsPage {
       statsChartOutline,
       cloudUploadOutline,
       addCircleOutline,
-      serverOutline
+      serverOutline,
+      gitCompareOutline
     });
   }
 }

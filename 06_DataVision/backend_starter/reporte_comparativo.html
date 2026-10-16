@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DataVision | Comparativa académica</title>
+  <style>
+    :root {font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#17303b;background:#f3f7f8}
+    * {box-sizing:border-box} body {margin:0} .wrap {max-width:1060px;margin:auto;padding:28px 18px 48px}
+    h1 {margin:0 0 6px;font-size:clamp(1.5rem,4vw,2.2rem)} p {color:#59707b;margin:0 0 18px}
+    .eyebrow {color:#0c857a;font-weight:750;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
+    .card {background:white;border:1px solid #dce9e9;border-radius:16px;padding:20px;box-shadow:0 5px 20px #16383e08}
+    .filters {display:grid;grid-template-columns:repeat(3,minmax(120px,1fr)) auto;gap:12px;align-items:end;margin:16px 0 20px}
+    label {font-weight:650;font-size:.85rem;display:block;margin-bottom:6px} input,select,button {border-radius:9px;padding:11px;font:inherit;min-height:43px}
+    input,select {width:100%;border:1px solid #c8d7d9;background:#fff;color:#183643}
+    button {border:0;color:white;background:#0d9488;font-weight:700;cursor:pointer;padding:11px 20px}
+    button:disabled {opacity:.6;cursor:wait} .kpis {display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .kpi-label {font-size:.82rem;color:#55727c}.kpi-value {font-size:clamp(1.35rem,3vw,2rem);font-weight:750;margin-top:8px;color:#11383e}
+    .chart-title {margin:0 0 12px;font-size:1.12rem}.bar-row {display:grid;grid-template-columns:90px 1fr 64px;gap:12px;align-items:center;margin:13px 0}
+    .bar-track {height:18px;background:#e9f3f2;border-radius:100px;overflow:hidden}.bar-fill {height:100%;background:linear-gradient(90deg,#0d9488,#2dd4bf);border-radius:100px}
+    .bar-value {text-align:right;font-variant-numeric:tabular-nums;font-weight:700} .table-scroll {overflow-x:auto;margin-top:16px}
+    table {width:100%;border-collapse:collapse;min-width:600px;text-align:left} th,td {padding:11px 10px;border-bottom:1px solid #e7eeee;font-size:.92rem}
+    th {background:#eff8f7;color:#255860} .message {min-height:24px;margin:14px 0;color:#436872}
+    .error {color:#a51f35} footer {font-size:.8rem;color:#5b747c;margin-top:18px}
+    @media(max-width:760px){.filters{grid-template-columns:1fr 1fr}.filters button{grid-column:1/-1}.kpis{grid-template-columns:1fr 1fr}}
+    @media(max-width:430px){.filters{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.bar-row{grid-template-columns:56px 1fr 52px;gap:8px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">DataVision · Reporte de backend</div>
+    <h1>Comparativa de rendimiento académico</h1>
+    <p>Estadísticas calculadas directamente desde MySQL, sin modificar ningún registro.</p>
+
+    <form class="filters card" id="filters">
+      <div><label for="desde">Desde</label><input type="date" id="desde"></div>
+      <div><label for="hasta">Hasta</label><input type="date" id="hasta"></div>
+      <div><label for="grupo">Grupo</label><select id="grupo"><option value="">Todos los grupos</option></select></div>
+      <button id="consultar" type="submit">Consultar</button>
+    </form>
+    <div id="mensaje" class="message" role="status" aria-live="polite"></div>
+
+    <div class="kpis">
+      <div class="card"><div class="kpi-label">Registros</div><div class="kpi-value" id="registros">—</div></div>
+      <div class="card"><div class="kpi-label">Asistencia ponderada</div><div class="kpi-value" id="asistencia">—</div></div>
+      <div class="card"><div class="kpi-label">Promedio general</div><div class="kpi-value" id="promedio">—</div></div>
+      <div class="card"><div class="kpi-label">Tasa de entregas</div><div class="kpi-value" id="entregas">—</div></div>
+    </div>
+
+    <section class="card">
+      <h2 class="chart-title">Calificación promedio por grupo</h2>
+      <div id="grafica" aria-label="Comparación del promedio académico por grupo"></div>
+      <h2 class="chart-title" style="margin-top:26px">Tabla de detalle</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Grupo</th><th>Registros</th><th>Promedio</th><th>Asistencia</th><th>Entregas</th><th>Presentes / Inscritos</th></tr></thead>
+          <tbody id="tabla"></tbody>
+        </table>
+      </div>
+    </section>
+    <footer>Ampliación opcional y aislada · API PHP + consultas SQL parametrizadas · GET de solo lectura</footer>
+  </main>
+<script>
+  'use strict';
+  const el = id => document.getElementById(id);
+  const format = (n, suffix = '') => n == null ? 'Sin datos' : Number(n).toLocaleString('es-MX', {maximumFractionDigits:2}) + suffix;
+  let gruposConocidos = [];
+  function render(data) {
+    const k = data.resumen;
+    el('registros').textContent = format(k.registros);
+    el('asistencia').textContent = format(k.asistenciaPonderada, '%');
+    el('promedio').textContent = format(k.promedioGeneral);
+    el('entregas').textContent = format(k.tasaEntregas, '%');
+    el('grafica').replaceChildren(); el('tabla').replaceChildren();
+    if (!data.grupos.length) {
+      const vacio = document.createElement('p'); vacio.textContent = 'No hay datos para los filtros seleccionados.';
+      el('grafica').append(vacio); return;
+    }
+    for (const grupo of data.grupos) {
+      const row = document.createElement('div'); row.className = 'bar-row';
+      const name = document.createElement('strong'); name.textContent = grupo.grupo;
+      const track = document.createElement('div'); track.className = 'bar-track';
+      const fill = document.createElement('div'); fill.className = 'bar-fill';
+      fill.style.width = Math.max(0, Math.min(100, Number(grupo.promedio))) + '%'; track.append(fill);
+      const value = document.createElement('span'); value.className = 'bar-value'; value.textContent = format(grupo.promedio);
+      row.append(name,track,value); el('grafica').append(row);
+      const tr = document.createElement('tr');
+      for (const cellValue of [grupo.grupo,grupo.registros,format(grupo.promedio),format(grupo.asistenciaPonderada,'%'),format(grupo.tasaEntregas,'%'),`${grupo.presentes} / ${grupo.inscritos}`]) {
+        const td = document.createElement('td'); td.textContent = String(cellValue); tr.append(td);
+      }
+      el('tabla').append(tr);
+    }
+  }
+  async function consultar(event) {
+    if (event) event.preventDefault();
+    const desde = el('desde').value, hasta = el('hasta').value;
+    if (desde && hasta && desde > hasta) {el('mensaje').className='message error';el('mensaje').textContent='La fecha inicial no puede ser mayor a la final.';return;}
+    const params = new URLSearchParams();
+    for (const id of ['desde','hasta','grupo']) if (el(id).value) params.set(id,el(id).value);
+    el('consultar').disabled = true;
+    el('mensaje').className='message'; el('mensaje').textContent='Consultando datos de MySQL...';
+    try {
+      const response = await fetch(`./api/reportes/comparativa.php?${params.toString()}`, {cache:'no-store'});
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
+      if (!params.has('grupo')) {
+        gruposConocidos = result.grupos.map(g => g.grupo);
+        const current = el('grupo').value;
+        el('grupo').replaceChildren(new Option('Todos los grupos',''));
+        for (const grupo of gruposConocidos) el('grupo').add(new Option(grupo,grupo));
+        el('grupo').value = current;
+      }
+      render(result);
+      el('mensaje').textContent=`Consulta finalizada: ${result.resumen.registros} registro(s), ${result.grupos.length} grupo(s).`;
+    } catch (error) {
+      el('mensaje').className='message error';
+      el('mensaje').textContent=`No fue posible consultar el backend: ${error.message}`;
+    } finally {
+      el('consultar').disabled = false;
+    }
+  }
+  el('filters').addEventListener('submit', consultar);
+  consultar();
+</script>
+</body>
+</html>

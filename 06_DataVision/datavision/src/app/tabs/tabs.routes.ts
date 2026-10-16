@@ -23,6 +23,10 @@ export const routes: Routes = [
         loadComponent: () => import('../tab4/tab4.page').then((m) => m.Tab4Page),
       },
       {
+        path: 'comparativa',
+        loadComponent: () => import('../comparativa/comparativa.page').then((m) => m.ComparativaPage),
+      },
+      {
         path: '',
         redirectTo: '/tabs/analytics',
         pathMatch: 'full',
