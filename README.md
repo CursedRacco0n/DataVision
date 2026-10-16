@@ -50,7 +50,7 @@ php -S 0.0.0.0:8000 api_indicadores.php
 
 ### 2. Frontend Ionic
 ```bash
-cd 06_DataVision/datavision
+cd datavision
 npm install
 npm start
 ```
