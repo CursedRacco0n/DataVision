@@ -1,7 +1,7 @@
 <?php
 return [
-  'host' => '127.0.0.1',
-  'port' => 3304, // Cambiar por el puerto MySQL de su equipo
+  'host' => 'localhost',
+  'port' => 3307, // Cambiar por el puerto MySQL de su equipo
   'database' => 'datavision_academico',
   'username' => 'root',
   'password' => '',

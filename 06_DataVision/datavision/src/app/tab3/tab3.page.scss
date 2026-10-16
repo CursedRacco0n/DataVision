@@ -7,6 +7,43 @@
   }
 }
 
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  .btn-ejemplo {
+    --border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.sugerencias-grupos {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  .sugerencias-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .chip-grupo {
+    --background: transparent;
+    font-size: 0.75rem;
+    font-weight: 700;
+    height: 26px;
+    cursor: pointer;
+    margin: 0;
+  }
+}
+
 .input-group {
   margin-bottom: 16px;
 

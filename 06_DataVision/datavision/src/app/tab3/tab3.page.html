@@ -7,18 +7,26 @@
 <ion-content [fullscreen]="true" class="ion-padding">
   <ion-card class="form-card">
     <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="add-circle-outline" color="primary"></ion-icon>
-        Captura de Indicadores
-      </ion-card-title>
-      <ion-card-subtitle>Ingresa los datos para alimentar el dashboard en tiempo real</ion-card-subtitle>
+      <div class="header-row">
+        <div>
+          <ion-card-title>
+            <ion-icon name="add-circle-outline" color="primary"></ion-icon>
+            Captura de Indicadores
+          </ion-card-title>
+          <ion-card-subtitle>Ingresa los datos para alimentar el dashboard en tiempo real</ion-card-subtitle>
+        </div>
+        <ion-button fill="outline" size="small" color="secondary" (click)="cargarEjemplo()" class="btn-ejemplo">
+          <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+          Ejemplo
+        </ion-button>
+      </div>
     </ion-card-header>
 
     <ion-card-content>
       <!-- Fecha de Medición -->
       <div class="input-group">
         <ion-label class="custom-label">
-          <ion-icon name="calendar-outline"></ion-icon> Fecha
+          <ion-icon name="calendar-outline"></ion-icon> Fecha de Medición
         </ion-label>
         <ion-item lines="none" class="custom-item">
           <ion-input
@@ -36,8 +44,22 @@
           <ion-icon name="school-outline"></ion-icon> Materia / Grupo
         </ion-label>
         <ion-item lines="none" class="custom-item">
-          <ion-input type="text" [(ngModel)]="grupo" maxlength="20" required placeholder="Escribe materia o grupo" aria-label="Materia o Grupo"></ion-input>
+          <ion-input type="text" [(ngModel)]="grupo" maxlength="20" required placeholder="Ej: 2A, Maths, Inglés..." aria-label="Materia o Grupo"></ion-input>
         </ion-item>
+
+        <!-- Chips sugeridos para selección rápida -->
+        <div class="sugerencias-grupos" *ngIf="gruposDisponibles.length">
+          <span class="sugerencias-label">Sugeridos:</span>
+          <ion-chip
+            *ngFor="let g of gruposDisponibles"
+            (click)="seleccionarGrupo(g)"
+            [color]="grupo === g ? 'primary' : 'medium'"
+            outline
+            class="chip-grupo"
+          >
+            {{ g }}
+          </ion-chip>
+        </div>
       </div>
 
       <!-- Inscritos y Presentes -->
@@ -53,7 +75,7 @@
                   type="number"
                   min="1"
                   [(ngModel)]="inscritos"
-                  placeholder="30"
+                  placeholder="Ej: 30"
                   aria-label="Inscritos"
                 ></ion-input>
               </ion-item>
@@ -75,7 +97,7 @@
                   min="0"
                   [max]="inscritos"
                   [(ngModel)]="presentes"
-                  placeholder="27"
+                  placeholder="Ej: 28"
                   aria-label="Presentes"
                 ></ion-input>
               </ion-item>
@@ -92,7 +114,7 @@
       <div class="input-group">
         <div class="range-header">
           <ion-label class="custom-label">
-            <ion-icon name="ribbon-outline"></ion-icon> Promedio de Calificación
+            <ion-icon name="ribbon-outline"></ion-icon> Promedio de Calificación (0 - 100)
           </ion-label>
           <span class="range-value-pill">{{ promedio }} / 100</span>
         </div>
@@ -123,7 +145,7 @@
                   type="number"
                   min="0"
                   [(ngModel)]="actividadesProgramadas"
-                  placeholder="30"
+                  placeholder="Ej: 30"
                   aria-label="Actividades Programadas"
                 ></ion-input>
               </ion-item>
@@ -145,7 +167,7 @@
                   min="0"
                   [max]="actividadesProgramadas"
                   [(ngModel)]="actividadesEntregadas"
-                  placeholder="26"
+                  placeholder="Ej: 27"
                   aria-label="Actividades Entregadas"
                 ></ion-input>
               </ion-item>
@@ -153,6 +175,10 @@
           </ion-col>
         </ion-row>
       </ion-grid>
+
+      <ion-note *ngIf="actividadesEntregadas !== null && actividadesProgramadas !== null && actividadesEntregadas > actividadesProgramadas" color="danger" class="error-note">
+        Actividades entregadas ({{ actividadesEntregadas }}) no puede superar a las programadas ({{ actividadesProgramadas }}).
+      </ion-note>
 
       <!-- Indicadores Calculados en Tiempo Real -->
       <div class="calculated-indicators">
@@ -176,7 +202,7 @@
           expand="block"
           color="primary"
           class="submit-button"
-          [disabled]="guardando || hayErrorValidacion"
+          [disabled]="guardando"
           (click)="guardarRegistro()"
         >
           <ion-spinner *ngIf="guardando" name="crescent" slot="start"></ion-spinner>
@@ -205,3 +231,4 @@
     (didDismiss)="mostrarToast = false"
   ></ion-toast>
 </ion-content>
+

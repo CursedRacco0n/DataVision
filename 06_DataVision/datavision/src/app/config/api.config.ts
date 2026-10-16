@@ -1,3 +1,4 @@
-// Cambia esta URL si accedes desde un dispositivo físico (usa la IP LAN del servidor).
-// En Android Emulator suele usarse 10.0.2.2 en lugar de localhost.
-export const API_BASE_URL = 'http://localhost/backend_starter/api';
+// URL base por defecto para el backend de la API.
+// Soporta puerto 8088 (XAMPP con puerto alternativo cuando el puerto 80 está ocupado) o estándar 80.
+export const API_BASE_URL = 'http://localhost:8088/backend_starter/api';
+

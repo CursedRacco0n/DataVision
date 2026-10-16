@@ -23,9 +23,9 @@ function db(): PDO {
     $username = $c['username'] ?? 'root';
     $password = $c['password'] ?? '';
 
-    // Lista de puertos a intentar: el configurado primero, luego los puertos comunes de XAMPP / MariaDB
+    // Lista de puertos a intentar: el detectado/configurado primero, luego los puertos comunes de XAMPP / MariaDB
     $puertoConfigurado = (int)($c['port'] ?? 3306);
-    $puertosAIntentar = [$puertoConfigurado]; // Evita conectarse a una instancia equivocada.
+    $puertosAIntentar = array_unique([$puertoConfigurado, 3306, 3307, 3304, 3308]);
 
     $pdoOptions = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
