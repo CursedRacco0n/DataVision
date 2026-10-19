@@ -16,8 +16,9 @@ function reply(int $status, array $data): never {
     exit;
 }
 function json_body(): array {
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw ?: '', true);
+    $raw = file_get_contents('php://input') ?: '';
+    $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw));
+    $data = json_decode($raw, true);
     if (!is_array($data)) reply(400, ['ok' => false, 'error' => 'JSON no válido']);
     return $data;
 }

@@ -28,8 +28,7 @@ import {
   checkmarkCircleOutline,
   alertCircleOutline,
   syncOutline,
-  fileTrayFullOutline,
-  flaskOutline
+  fileTrayFullOutline
 } from 'ionicons/icons';
 import { CsvService } from '../services/csv.service';
 import { DataService } from '../services/data.service';
@@ -93,8 +92,7 @@ export class Tab2Page {
       checkmarkCircleOutline,
       alertCircleOutline,
       syncOutline,
-      fileTrayFullOutline,
-      flaskOutline
+      fileTrayFullOutline
     });
   }
 
@@ -127,7 +125,6 @@ export class Tab2Page {
       this.cdr.detectChanges();
     }
   }
-
 
   /**
    * Sincroniza las filas válidas en MySQL / Memoria reactiva y actualiza ECharts
