@@ -1,8 +1,12 @@
 <ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-title>DataVision</ion-title>
-    <ion-badge slot="end" [color]="isOnline ? 'success' : 'warning'" class="header-status-badge">
-      {{ isOnline ? 'MySQL Conectado' : 'Sin conexión' }}
+    <ion-badge
+      slot="end"
+      [color]="isOnline ? 'success' : (isUsingCache ? 'warning' : 'danger')"
+      class="header-status-badge"
+    >
+      {{ isOnline ? 'MySQL Conectado' : (isUsingCache ? 'Modo Offline (Caché)' : 'Sin conexión') }}
     </ion-badge>
   </ion-toolbar>
 
@@ -71,8 +75,19 @@
   </ion-refresher>
 
   <div class="api-message" *ngIf="cargando">Cargando registros de MySQL...</div>
-  <div class="api-message api-error" *ngIf="errorCarga" role="alert">{{ errorCarga }}</div>
-  <div class="api-message" *ngIf="!cargando && !errorCarga && !datosFiltrados.length">No hay registros para los filtros seleccionados.</div>
+
+  <div class="offline-banner" *ngIf="!isOnline && isUsingCache">
+    <div class="offline-banner-content">
+      <ion-icon name="cloud-offline-outline"></ion-icon>
+      <div>
+        <strong>Modo Fuera de Línea (Datos en Caché)</strong>
+        <p>Mostrando los últimos datos guardados{{ lastSyncDate ? ' (' + lastSyncDate + ')' : '' }}. Los cambios en vivo se sincronizan cuando tu dispositivo esté en la misma red Wi-Fi del servidor.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-message api-error" *ngIf="!isOnline && !isUsingCache && errorCarga" role="alert">{{ errorCarga }}</div>
+  <div class="api-message" *ngIf="!cargando && !datosFiltrados.length">No hay registros para los filtros seleccionados.</div>
   <div class="dashboard-layout">
     <!-- ============ Columna principal ============ -->
     <div class="dashboard-main">

@@ -1,25 +1,43 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
-import { API_BASE_URL } from '../config/api.config';
+import { Capacitor } from '@capacitor/core';
+import { API_BASE_URL, API_LAN_URL, LOCAL_LAN_IP } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private baseUrl = API_BASE_URL;
 
-  // Lista de URLs comunes en los equipos de desarrollo (Apache 8088, Apache estándar 80, php -S 8000)
+  // Lista de URLs comunes: LAN Wi-Fi para móviles, localhost para navegadores en PC
   private readonly candidateUrls: string[] = [
+    API_LAN_URL,
+    'http://192.168.100.12:8088/backend_starter/api',
+    'http://192.168.100.12/backend_starter/api',
     API_BASE_URL,
     'http://localhost:8088/backend_starter/api',
     'http://localhost/backend_starter/api',
+    'http://10.0.2.2:8088/backend_starter/api',
     'http://127.0.0.1:8088/backend_starter/api',
-    'http://127.0.0.1/backend_starter/api',
     'http://localhost:8000'
   ];
 
   constructor(private http: HttpClient) {
+    const isNative = Capacitor.isNativePlatform();
+    const defaultUrl = isNative ? API_LAN_URL : API_BASE_URL;
     const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('datavision_api_url') : null;
-    this.baseUrl = saved || API_BASE_URL;
+    this.baseUrl = saved || defaultUrl;
+  }
+
+  isNativePlatform(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+
+  getLanUrl(): string {
+    return API_LAN_URL;
+  }
+
+  getLocalLanIp(): string {
+    return LOCAL_LAN_IP;
   }
 
   getBaseUrl(): string {

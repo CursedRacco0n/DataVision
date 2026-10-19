@@ -35,7 +35,10 @@ import {
   checkmarkCircleOutline,
   closeCircleOutline,
   linkOutline,
-  schoolOutline
+  schoolOutline,
+  wifiOutline,
+  cloudOfflineOutline,
+  sparklesOutline
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import { DataService } from '../services/data.service';
@@ -80,6 +83,13 @@ export class Tab4Page implements OnInit, OnDestroy {
   estadoConexion: 'desconocido' | 'conectado' | 'desconectado' = 'desconocido';
   mensajeEstado: string = 'Sin probar';
 
+  // Red local y estado de caché
+  lanUrl: string = '';
+  localLanIp: string = '';
+  esNativo: boolean = false;
+  isUsingCache: boolean = false;
+  lastSyncDate: string = '';
+
   terminoBusqueda: string = '';
   filtroOrigen: 'todos' | 'manual' | 'csv' = 'todos';
 
@@ -107,12 +117,18 @@ export class Tab4Page implements OnInit, OnDestroy {
       checkmarkCircleOutline,
       closeCircleOutline,
       linkOutline,
-      schoolOutline
+      schoolOutline,
+      wifiOutline,
+      cloudOfflineOutline,
+      sparklesOutline
     });
   }
 
   ngOnInit(): void {
     this.apiUrl = this.apiService.getBaseUrl();
+    this.lanUrl = this.apiService.getLanUrl();
+    this.localLanIp = this.apiService.getLocalLanIp();
+    this.esNativo = this.apiService.isNativePlatform();
 
     this.sub.add(
       this.dataService.indicadores$.subscribe((items) => {
@@ -124,8 +140,23 @@ export class Tab4Page implements OnInit, OnDestroy {
       this.dataService.isBackendOnline$.subscribe((online) => {
         if (online) {
           this.estadoConexion = 'conectado';
-          this.mensajeEstado = 'Servidor y MySQL activos';
+          this.mensajeEstado = 'Servidor y MySQL activos en la red';
+        } else if (this.isUsingCache) {
+          this.estadoConexion = 'desconectado';
+          this.mensajeEstado = 'Modo Offline: Mostrando datos guardados en caché';
         }
+      })
+    );
+
+    this.sub.add(
+      this.dataService.isUsingCache$.subscribe((using) => {
+        this.isUsingCache = using;
+      })
+    );
+
+    this.sub.add(
+      this.dataService.lastSyncDate$.subscribe((date) => {
+        this.lastSyncDate = date;
       })
     );
 
@@ -136,6 +167,42 @@ export class Tab4Page implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+  }
+
+  conectarLanWifi(): void {
+    this.apiUrl = this.lanUrl;
+    this.guardarUrlApi();
+  }
+
+  conectarLocalhost(): void {
+    this.apiUrl = 'http://localhost:8088/backend_starter/api';
+    this.guardarUrlApi();
+  }
+
+  async autoDetectarRed(): Promise<void> {
+    this.probandoConexion = true;
+    try {
+      const found = await this.apiService.autoDetectBackend();
+      if (found) {
+        this.apiUrl = found;
+        this.lanzarToast(`Conectado a ${found}`, 'success');
+        await this.probarConexion();
+        await this.recargarDesdeMySQL();
+      } else {
+        this.lanzarToast('No se encontró servidor activo en la red local. Verifica que ambos estén en la misma Wi-Fi.', 'warning');
+      }
+    } catch (e: any) {
+      this.lanzarToast(`Error en autodetección: ${e.message}`, 'danger');
+    } finally {
+      this.probandoConexion = false;
+    }
+  }
+
+  limpiarCacheLocal(): void {
+    if (confirm('¿Deseas vaciar los datos guardados en la memoria caché del dispositivo?')) {
+      this.dataService.limpiarCache();
+      this.lanzarToast('Caché local vaciada', 'success');
+    }
   }
 
   guardarUrlApi(): void {

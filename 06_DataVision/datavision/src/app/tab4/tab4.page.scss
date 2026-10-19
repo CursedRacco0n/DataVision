@@ -28,6 +28,75 @@
       font-weight: 600;
     }
   }
+
+  .network-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #e2e8f0;
+
+    ion-button {
+      --border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+  }
+
+  .network-info-box {
+    margin-top: 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+
+    .network-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 0;
+      font-size: 0.76rem;
+      color: #64748b;
+      line-height: 1.4;
+
+      ion-icon {
+        color: #0d9488;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+    }
+
+    .cache-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+
+      .cache-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.76rem;
+        color: #475569;
+        font-weight: 600;
+
+        ion-icon {
+          color: #f59e0b;
+        }
+      }
+
+      ion-button {
+        --padding-start: 6px;
+        --padding-end: 6px;
+        font-size: 0.72rem;
+        height: 24px;
+      }
+    }
+  }
 }
 
 .search-section {

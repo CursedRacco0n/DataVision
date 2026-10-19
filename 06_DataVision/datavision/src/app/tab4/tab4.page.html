@@ -73,6 +73,41 @@
           Sincronizar BD
         </ion-button>
       </div>
+
+      <!-- Presets Rápidos de Red -->
+      <div class="network-presets">
+        <ion-button size="small" fill="solid" color="tertiary" (click)="conectarLanWifi()">
+          <ion-icon name="wifi-outline" slot="start"></ion-icon>
+          Usar Wi-Fi Local ({{ localLanIp }})
+        </ion-button>
+
+        <ion-button size="small" fill="outline" color="medium" (click)="conectarLocalhost()">
+          Localhost (PC)
+        </ion-button>
+
+        <ion-button size="small" fill="outline" color="secondary" [disabled]="probandoConexion" (click)="autoDetectarRed()">
+          <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+          Auto-Detectar Red
+        </ion-button>
+      </div>
+
+      <!-- Info de Sincronización en Red y Caché Offline -->
+      <div class="network-info-box">
+        <p class="network-note">
+          <ion-icon name="wifi-outline"></ion-icon>
+          <span><strong>Regla de Red:</strong> Para sincronizar datos en tu celular, debes estar conectado a la <strong>misma red Wi-Fi</strong> que esta PC. Si sales de la red, los datos no se sincronizan pero se conservan en la memoria caché del teléfono.</span>
+        </p>
+
+        <div class="cache-status-row" *ngIf="indicadores.length > 0">
+          <span class="cache-label">
+            <ion-icon name="cloud-offline-outline"></ion-icon>
+            Caché offline: {{ indicadores.length }} registros{{ lastSyncDate ? ' (sincronizado: ' + lastSyncDate + ')' : '' }}
+          </span>
+          <ion-button fill="clear" color="danger" size="small" (click)="limpiarCacheLocal()">
+            Vaciar Caché
+          </ion-button>
+        </div>
+      </div>
     </ion-card-content>
   </ion-card>
 

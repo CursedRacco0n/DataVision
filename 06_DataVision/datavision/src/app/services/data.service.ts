@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, timeout } from 'rxjs';
 import { IndicadorAcademico, IndicadoresResponse, ResumenKpis } from '../models/indicador.model';
 import { ApiService } from './api.service';
 
 export interface FiltrosIndicadores { anio: string; mes: string; grupo: string; }
+
+const STORAGE_KEY_INDICADORES = 'datavision_indicadores_cache';
+const STORAGE_KEY_TIMESTAMP = 'datavision_cache_timestamp';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
@@ -12,30 +15,87 @@ export class DataService {
   readonly indicadores$ = this.indicadoresSubject.asObservable();
   private readonly onlineSubject = new BehaviorSubject<boolean>(false);
   readonly isBackendOnline$ = this.onlineSubject.asObservable();
+  private readonly usingCacheSubject = new BehaviorSubject<boolean>(false);
+  readonly isUsingCache$ = this.usingCacheSubject.asObservable();
+  private readonly lastSyncDateSubject = new BehaviorSubject<string>('');
+  readonly lastSyncDate$ = this.lastSyncDateSubject.asObservable();
   private readonly errorSubject = new BehaviorSubject<string>('');
   readonly error$ = this.errorSubject.asObservable();
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
   private filtros: FiltrosIndicadores = { anio: 'todos', mes: 'todos', grupo: 'todos' };
 
-  constructor(private http: HttpClient, private api: ApiService) {}
+  constructor(private http: HttpClient, private api: ApiService) {
+    this.recuperarCacheInicial();
+  }
 
   get todos(): IndicadorAcademico[] { return this.indicadoresSubject.value; }
   setFiltros(filtros: FiltrosIndicadores): void { this.filtros = { ...filtros }; }
+
+  /**
+   * Carga los datos almacenados en localStorage para que la app nunca arranque en blanco
+   */
+  private recuperarCacheInicial(): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_INDICADORES);
+      const time = localStorage.getItem(STORAGE_KEY_TIMESTAMP) || '';
+      if (raw) {
+        const items = JSON.parse(raw);
+        if (Array.isArray(items) && items.length > 0) {
+          this.indicadoresSubject.next(items);
+          this.usingCacheSubject.next(true);
+          this.lastSyncDateSubject.next(time);
+        }
+      }
+    } catch (e) {
+      console.warn('Error leyendo caché inicial:', e);
+    }
+  }
+
+  /**
+   * Guarda los datos en localStorage cada vez que se sincronizan con la BD
+   */
+  private guardarEnCache(items: IndicadorAcademico[]): void {
+    if (typeof localStorage === 'undefined' || !items) return;
+    try {
+      const nowStr = new Date().toLocaleString();
+      localStorage.setItem(STORAGE_KEY_INDICADORES, JSON.stringify(items));
+      localStorage.setItem(STORAGE_KEY_TIMESTAMP, nowStr);
+      this.lastSyncDateSubject.next(nowStr);
+      this.usingCacheSubject.next(false);
+    } catch (e) {
+      console.warn('Error guardando en caché:', e);
+    }
+  }
+
+  limpiarCache(): void {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(STORAGE_KEY_INDICADORES);
+    localStorage.removeItem(STORAGE_KEY_TIMESTAMP);
+    this.lastSyncDateSubject.next('');
+    if (!this.onlineSubject.value) {
+      this.indicadoresSubject.next([]);
+      this.usingCacheSubject.next(false);
+    }
+  }
 
   async cargarDesdeBackend(): Promise<boolean> {
     this.loadingSubject.next(true);
     this.errorSubject.next('');
     try {
-      // Traer el conjunto completo para que los filtros y sus opciones siempre reflejen la BD.
       let response: IndicadoresResponse;
       try {
-        response = await firstValueFrom(this.http.get<IndicadoresResponse>(this.api.url('indicadores/list.php') + '?_=' + Date.now()));
+        response = await firstValueFrom(
+          this.http.get<IndicadoresResponse>(this.api.url('indicadores/list.php') + '?_=' + Date.now()).pipe(timeout(3500))
+        );
       } catch (firstErr) {
-        // Si falló el puerto por defecto, intentar autodetectar la URL del servidor
+        // Si falló (ej. móvil en red local con IP diferente), intentar autodetectar la URL del servidor
         const detected = await this.api.autoDetectBackend();
         if (detected) {
-          response = await firstValueFrom(this.http.get<IndicadoresResponse>(this.api.url('indicadores/list.php') + '?_=' + Date.now()));
+          response = await firstValueFrom(
+            this.http.get<IndicadoresResponse>(this.api.url('indicadores/list.php') + '?_=' + Date.now()).pipe(timeout(3500))
+          );
         } else {
           throw firstErr;
         }
@@ -51,14 +111,36 @@ export class DataService {
         actividadesProgramadas: Number(d.actividadesProgramadas),
         actividadesEntregadas: Number(d.actividadesEntregadas), origen: d.origen
       }));
+
+      // Sincronización exitosa con MySQL
       this.indicadoresSubject.next(items);
       this.onlineSubject.next(true);
+      this.usingCacheSubject.next(false);
+      this.guardarEnCache(items);
       return true;
     } catch (error: unknown) {
-      this.indicadoresSubject.next([]); // No mostrar datos anteriores como si fueran actuales.
+      // Base de datos no disponible o dispositivo fuera de la red local Wi-Fi
       this.onlineSubject.next(false);
-      const message = error instanceof Error ? error.message : 'No se pudo consultar el backend';
-      this.errorSubject.next(`No se pudieron cargar los datos: ${message}. Revisa Apache, MySQL y la URL de la API.`);
+
+      // PERSISTENCIA: Si hay datos previos o en caché, conservarlos
+      const hayDatos = this.indicadoresSubject.value.length > 0;
+      if (hayDatos) {
+        this.usingCacheSubject.next(true);
+        const lastSync = this.lastSyncDateSubject.value ? ` (última sincro: ${this.lastSyncDateSubject.value})` : '';
+        this.errorSubject.next(`Sin conexión con la BD en la red local. Mostrando datos guardados en caché${lastSync}.`);
+      } else {
+        // Intentar recuperar del storage
+        this.recuperarCacheInicial();
+        if (this.indicadoresSubject.value.length > 0) {
+          this.usingCacheSubject.next(true);
+          this.errorSubject.next('Sin conexión con la BD. Mostrando datos guardados en caché.');
+        } else {
+          this.indicadoresSubject.next([]);
+          this.usingCacheSubject.next(false);
+          const message = error instanceof Error ? error.message : 'No se pudo consultar el backend';
+          this.errorSubject.next(`Sin conexión con la BD: ${message}. Conéctate a la misma red Wi-Fi.`);
+        }
+      }
       return false;
     } finally {
       this.loadingSubject.next(false);

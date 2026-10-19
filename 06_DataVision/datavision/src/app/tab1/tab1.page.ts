@@ -45,7 +45,8 @@ import {
   pieChartOutline,
   trendingUpOutline,
   barChartOutline,
-  filterOutline
+  filterOutline,
+  cloudOfflineOutline
 } from 'ionicons/icons';
 import * as echarts from 'echarts';
 import { Subscription } from 'rxjs';
@@ -119,6 +120,8 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
 
   datosFiltrados: IndicadorAcademico[] = [];
   isOnline = false;
+  isUsingCache = false;
+  lastSyncDate = '';
   cargando = false;
   errorCarga = '';
   aniosDisponibles: string[] = [];
@@ -138,7 +141,8 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
       pieChartOutline,
       trendingUpOutline,
       barChartOutline,
-      filterOutline
+      filterOutline,
+      cloudOfflineOutline
     });
   }
 
@@ -155,6 +159,19 @@ export class Tab1Page implements OnInit, AfterViewInit, OnDestroy {
         this.isOnline = online;
       })
     );
+
+    this.subs.add(
+      this.dataService.isUsingCache$.subscribe((using) => {
+        this.isUsingCache = using;
+      })
+    );
+
+    this.subs.add(
+      this.dataService.lastSyncDate$.subscribe((date) => {
+        this.lastSyncDate = date;
+      })
+    );
+
     this.subs.add(this.dataService.error$.subscribe(error => { this.errorCarga = error; }));
     this.subs.add(this.dataService.loading$.subscribe(value => { this.cargando = value; }));
     void this.recargarDatos();
