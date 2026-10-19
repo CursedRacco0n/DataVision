@@ -1,13 +1,10 @@
 <?php
 declare(strict_types=1);
-// Solo desarrollo local: especificar origen exacto o restringir a la LAN en producción.
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if ($origin !== '') {
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Vary: Origin');
-}
+// CORS permisivo para desarrollo híbrido móvil (Capacitor / Ionic / Ngrok / LAN)
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+header("Access-Control-Allow-Origin: {$origin}");
 header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Accept');
+header('Access-Control-Allow-Headers: Content-Type, Accept, Authorization, X-Requested-With, ngrok-skip-browser-warning');
 header('Content-Type: application/json; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 function reply(int $status, array $data): never {

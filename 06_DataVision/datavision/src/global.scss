@@ -118,29 +118,42 @@ ion-card {
 ion-tab-bar {
   --background: #ffffff;
   --border: 1px solid #e2e8f0;
-  height: 62px;
+  min-height: calc(58px + max(env(safe-area-inset-bottom, 0px), 12px));
+  height: auto;
+  padding-top: 4px;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+  contain: none;
 
   ion-tab-button {
     --color: #94a3b8;
     --color-selected: #0d9488;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    min-width: 0;
     transition: all 0.2s ease;
 
     ion-icon {
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       margin-bottom: 2px;
       transition: transform 0.2s ease;
     }
 
     ion-label {
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.66rem;
+      font-weight: 700;
       letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      padding: 0 1px;
+      line-height: 1.2;
     }
 
     &.tab-selected {
       ion-icon {
-        transform: translateY(-2px) scale(1.1);
+        transform: translateY(-1px) scale(1.1);
       }
     }
   }

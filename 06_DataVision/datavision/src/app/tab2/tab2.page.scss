@@ -114,7 +114,9 @@
   .sync-button {
     --border-radius: 12px;
     font-weight: 700;
-    height: 48px;
+    min-height: 46px;
+    height: auto;
+    font-size: clamp(0.8rem, 2.8vw, 0.95rem);
     --box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
   }
 }
@@ -146,6 +148,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
         margin-bottom: 6px;
 
         .row-title {

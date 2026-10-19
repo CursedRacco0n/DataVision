@@ -6,7 +6,7 @@
       [color]="isOnline ? 'success' : (isUsingCache ? 'warning' : 'danger')"
       class="header-status-badge"
     >
-      {{ isOnline ? 'MySQL Conectado' : (isUsingCache ? 'Modo Offline (Caché)' : 'Sin conexión') }}
+      {{ isOnline ? 'MySQL Online' : (isUsingCache ? 'Offline (Caché)' : 'Sin conexión') }}
     </ion-badge>
   </ion-toolbar>
 
@@ -22,7 +22,7 @@
           aria-label="Año"
           placeholder="Año"
         >
-          <ion-select-option value="todos">Todos los Años</ion-select-option>
+          <ion-select-option value="todos">Todos</ion-select-option>
           <ion-select-option *ngFor="let anio of aniosDisponibles" [value]="anio">{{ anio }}</ion-select-option>
         </ion-select>
       </div>
@@ -36,7 +36,7 @@
           aria-label="Mes"
           placeholder="Mes"
         >
-          <ion-select-option value="todos">Todos los Meses</ion-select-option>
+          <ion-select-option value="todos">Todos</ion-select-option>
           <ion-select-option value="01">Enero</ion-select-option>
           <ion-select-option value="02">Febrero</ion-select-option>
           <ion-select-option value="03">Marzo</ion-select-option>
@@ -58,8 +58,8 @@
           [(ngModel)]="filtroGrupo"
           (ionChange)="onFiltroChange()"
           interface="popover"
-          aria-label="Materia / Grupo"
-          placeholder="Materia / Grupo"
+          aria-label="Grupo"
+          placeholder="Grupo"
         >
           <ion-select-option value="todos">Todos</ion-select-option>
           <ion-select-option *ngFor="let grupo of gruposDisponibles" [value]="grupo">{{ grupo }}</ion-select-option>
@@ -142,7 +142,7 @@
               <div class="kpi-info">
                 <span class="kpi-label">Aprobación</span>
                 <h2 class="kpi-value">{{ kpis.tasaAprobacion }}%</h2>
-                <span class="kpi-subtext">Asignaturas aprobadas</span>
+                <span class="kpi-subtext">Aprobados &ge; 60</span>
               </div>
             </div>
           </ion-col>
@@ -172,7 +172,7 @@
         <ion-card-header>
           <div class="card-header-flex">
             <div>
-              <ion-card-title>Subject Time Per Token</ion-card-title>
+              <ion-card-title>Distribución por Materia</ion-card-title>
               <ion-card-subtitle>Distribución Académica y Asistencia</ion-card-subtitle>
             </div>
             <ion-segment [value]="pieMode" (ionChange)="cambiarModoPie($any($event.detail.value))" mode="ios">

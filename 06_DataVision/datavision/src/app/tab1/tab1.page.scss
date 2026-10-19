@@ -1,9 +1,13 @@
 .header-status-badge {
   font-size: 0.72rem;
-  margin-right: 14px;
+  margin-right: 12px;
   font-weight: 600;
   border-radius: 12px;
   padding: 4px 8px;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .offline-banner {
@@ -46,41 +50,52 @@
 .filters-toolbar {
   --background: transparent;
   --ion-toolbar-background: transparent;
-  --min-height: 48px;
-  padding: 4px 16px;
+  --min-height: 44px;
+  padding: 2px 12px 6px;
 
   .filters-container {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    padding-bottom: 2px;
   }
 
   .filter-item {
     display: flex;
     align-items: center;
     min-width: 0;
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(8px);
-    border-radius: 20px;
-    padding: 0 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
 
     .filter-icon {
       color: #ffffff;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       margin-right: 2px;
+      flex-shrink: 0;
     }
 
     ion-select {
       --color: #ffffff;
       --placeholder-color: #e2e8f0;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 600;
-      min-height: 32px;
+      min-height: 30px;
       min-width: 0;
       width: 100%;
+
+      &::part(text) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &::part(icon) {
+        width: 12px;
+        margin-inline-start: 1px;
+      }
     }
   }
 }
@@ -338,23 +353,40 @@
 
 @media (max-width: 640px) {
   .filters-toolbar {
-    padding-inline: 8px;
+    padding-inline: 6px;
 
     .filters-container {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
     }
 
     .filter-item {
-      padding-inline: 7px;
+      padding-inline: 6px;
+      border-radius: 14px;
+
+      .filter-icon {
+        font-size: 0.8rem;
+        margin-right: 2px;
+      }
 
       ion-select {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
+        min-height: 28px;
+        &::part(text) {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        &::part(icon) {
+          width: 12px;
+          margin-inline-start: 1px;
+        }
       }
     }
   }
 
   .kpi-grid {
-    padding: 6px 2px 4px;
+    padding: 6px 4px 2px;
 
     ion-col {
       padding: 4px;
@@ -363,31 +395,65 @@
 
   .kpi-card {
     padding: 10px;
-    gap: 7px;
+    gap: 8px;
 
-    .kpi-info .kpi-value {
-      font-size: 1.2rem;
+    .kpi-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+
+      ion-icon {
+        font-size: 1.05rem;
+      }
+    }
+
+    .kpi-info {
+      .kpi-label {
+        font-size: 0.62rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .kpi-value {
+        font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 1px 0 2px;
+      }
+
+      .kpi-subtext {
+        font-size: 0.62rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 
   .chart-card {
+    margin: 8px 4px;
+    width: calc(100% - 8px);
+
     .card-header-flex {
       flex-wrap: wrap;
       align-items: flex-start;
+      gap: 6px;
+
+      ion-card-title {
+        font-size: 0.95rem;
+      }
 
       ion-segment {
         width: 100%;
+        margin-top: 4px;
       }
     }
   }
-}
 
-@media (max-width: 380px) {
-  .filters-toolbar .filters-container {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .kpi-grid ion-col {
-    --ion-grid-column-size: 100%;
+  .echarts-box {
+    height: 270px;
+    min-height: 240px;
   }
 }

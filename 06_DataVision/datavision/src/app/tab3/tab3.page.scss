@@ -125,24 +125,32 @@
 }
 
 .calculated-indicators {
-  background: #f1f5f9;
+  background: #f8fafc;
   border-radius: 12px;
-  padding: 12px 14px;
-  margin: 18px 0;
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
+  padding: 10px;
+  margin: 16px 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+  border: 1px solid #e2e8f0;
 
   .indicator-tag {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 4px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 8px 6px;
+    border: 1px solid #e2e8f0;
 
     .tag-title {
-      font-size: 0.78rem;
+      font-size: 0.68rem;
       color: #64748b;
-      font-weight: 600;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
     }
   }
 }

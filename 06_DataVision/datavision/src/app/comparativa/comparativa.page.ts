@@ -35,7 +35,8 @@ import {
   IonRow,
   IonCol,
   IonSelect,
-  IonSelectOption
+  IonSelectOption,
+  IonIcon
 } from '@ionic/angular';
 
 import { ApiService } from '../services/api.service';
@@ -84,7 +85,8 @@ interface Comparativa {
     IonRow,
     IonCol,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonIcon
   ]
 })
 export class ComparativaPage implements OnInit {

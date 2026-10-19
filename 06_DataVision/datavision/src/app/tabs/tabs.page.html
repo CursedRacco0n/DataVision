@@ -1,27 +1,28 @@
 <ion-tabs>
-  <ion-tab-bar slot="bottom">
-    <ion-tab-button tab="analytics" href="/tabs/analytics">
+  <ion-tab-bar slot="bottom" class="custom-tab-bar">
+    <ion-tab-button tab="analytics" href="/tabs/analytics" aria-label="Dashboard de Analytics">
       <ion-icon aria-hidden="true" name="stats-chart-outline"></ion-icon>
-      <ion-label>Analytics</ion-label>
+      <ion-label>Dashboard</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="importar-csv" href="/tabs/importar-csv">
+    <ion-tab-button tab="importar-csv" href="/tabs/importar-csv" aria-label="Importar archivos CSV">
       <ion-icon aria-hidden="true" name="cloud-upload-outline"></ion-icon>
-      <ion-label>Importar CSV</ion-label>
+      <ion-label>Importar</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="nuevo-registro" href="/tabs/nuevo-registro">
+    <ion-tab-button tab="nuevo-registro" href="/tabs/nuevo-registro" aria-label="Nuevo registro de indicador">
       <ion-icon aria-hidden="true" name="add-circle-outline"></ion-icon>
-      <ion-label>Nuevo Registro</ion-label>
+      <ion-label>Registrar</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="datos-mysql" href="/tabs/datos-mysql">
+    <ion-tab-button tab="datos-mysql" href="/tabs/datos-mysql" aria-label="Datos y conexión MySQL">
       <ion-icon aria-hidden="true" name="server-outline"></ion-icon>
-      <ion-label>Datos / MySQL</ion-label>
+      <ion-label>Datos</ion-label>
     </ion-tab-button>
-    <ion-tab-button tab="comparativa" href="/tabs/comparativa">
+
+    <ion-tab-button tab="comparativa" href="/tabs/comparativa" aria-label="Comparativa de grupos">
       <ion-icon aria-hidden="true" name="git-compare-outline"></ion-icon>
-      <ion-label>Comparativa</ion-label>
+      <ion-label>Comparar</ion-label>
     </ion-tab-button>
   </ion-tab-bar>
 </ion-tabs>

@@ -1,35 +1,25 @@
 
-<ion-header>
-  <ion-toolbar>
-    <ion-title>
-      Comparativa de grupos
-    </ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Comparativa de Grupos</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-
+<ion-content class="ion-padding" [fullscreen]="true">
   <div class="wrap">
+    <div class="page-intro">
+      <h1>Rendimiento por Grupo</h1>
+      <p>Consulta y compara métricas clave entre distintos grupos académicos en tiempo real.</p>
+    </div>
 
-    <h1>Rendimiento por grupo</h1>
-
-    <p>
-      Consulta y compara el rendimiento académico
-      de los grupos registrados en DataVision.
-    </p>
-
-    <!-- FILTROS -->
-    <ion-card>
+    <!-- TARJETA DE FILTROS -->
+    <ion-card class="filter-card">
       <ion-card-content>
-
-        <ion-grid>
+        <ion-grid class="ion-no-padding">
           <ion-row>
-
             <!-- SELECTOR DE GRUPOS -->
-            <ion-col size="12" sizeMd="4">
-
-              <ion-item>
-
+            <ion-col size="12" size-md="4">
+              <div class="filter-field">
                 <ion-select
                   label="Grupo"
                   labelPlacement="stacked"
@@ -37,225 +27,148 @@
                   interface="popover"
                   [(ngModel)]="grupo"
                   [disabled]="cargandoGrupos"
+                  class="custom-select"
                 >
-
-                  <ion-select-option value="">
-                    Todos los grupos
-                  </ion-select-option>
-
-                  <ion-select-option
-                    *ngFor="let g of gruposDisponibles"
-                    [value]="g"
-                  >
-                    {{ g }}
-                  </ion-select-option>
-
+                  <ion-select-option value="">Todos los grupos</ion-select-option>
+                  <ion-select-option *ngFor="let g of gruposDisponibles" [value]="g">{{ g }}</ion-select-option>
                 </ion-select>
-
-              </ion-item>
-
-              <small *ngIf="cargandoGrupos">
-                Cargando grupos...
-              </small>
-
-              <small *ngIf="errorGrupos"
-                     class="error">
-                {{ errorGrupos }}
-              </small>
-
+                <small *ngIf="cargandoGrupos" class="helper-text">Cargando grupos...</small>
+                <small *ngIf="errorGrupos" class="error-text">{{ errorGrupos }}</small>
+              </div>
             </ion-col>
 
             <!-- FECHA INICIAL -->
-            <ion-col size="6" sizeMd="4">
-
-              <ion-item>
-
+            <ion-col size="6" size-md="4" class="col-left">
+              <div class="filter-field">
                 <ion-input
-                  label="Desde (AAAA-MM-DD)"
+                  label="Desde"
                   labelPlacement="stacked"
-                  placeholder="2026-01-01"
+                  type="date"
+                  placeholder="AAAA-MM-DD"
                   [(ngModel)]="desde"
-                >
-                </ion-input>
-
-              </ion-item>
-
+                  class="custom-input"
+                ></ion-input>
+              </div>
             </ion-col>
 
             <!-- FECHA FINAL -->
-            <ion-col size="6" sizeMd="4">
-
-              <ion-item>
-
+            <ion-col size="6" size-md="4" class="col-right">
+              <div class="filter-field">
                 <ion-input
-                  label="Hasta (AAAA-MM-DD)"
+                  label="Hasta"
                   labelPlacement="stacked"
-                  placeholder="2026-12-31"
+                  type="date"
+                  placeholder="AAAA-MM-DD"
                   [(ngModel)]="hasta"
-                >
-                </ion-input>
-
-              </ion-item>
-
+                  class="custom-input"
+                ></ion-input>
+              </div>
             </ion-col>
-
           </ion-row>
         </ion-grid>
 
-        <!-- BOTONES -->
-        <ion-button
-          (click)="consultar()"
-          [disabled]="cargando"
-        >
-          Consultar comparativa
-        </ion-button>
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="action-buttons-row">
+          <ion-button
+            color="primary"
+            class="btn-consultar"
+            (click)="consultar()"
+            [disabled]="cargando"
+          >
+            <ion-icon name="search-outline" slot="start"></ion-icon>
+            Consultar
+          </ion-button>
 
-        <ion-button
-          fill="outline"
-          color="medium"
-          (click)="limpiarFiltros()"
-          [disabled]="cargando"
-        >
-          Limpiar filtros
-        </ion-button>
+          <ion-button
+            fill="outline"
+            color="medium"
+            class="btn-limpiar"
+            (click)="limpiarFiltros()"
+            [disabled]="cargando"
+          >
+            <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+            Limpiar
+          </ion-button>
 
-        <ion-button
-          fill="clear"
-          (click)="actualizarTodo()"
-          [disabled]="cargando || cargandoGrupos"
-        >
-          Actualizar grupos
-        </ion-button>
-
+          <ion-button
+            fill="clear"
+            color="primary"
+            class="btn-actualizar"
+            (click)="actualizarTodo()"
+            [disabled]="cargando || cargandoGrupos"
+          >
+            <ion-icon name="refresh-outline" slot="start"></ion-icon>
+            Recargar
+          </ion-button>
+        </div>
       </ion-card-content>
     </ion-card>
 
     <!-- ESTADO DE CARGA -->
-    <div
-      *ngIf="cargando"
-      class="notice"
-    >
-      <ion-spinner></ion-spinner>
-      Cargando estadísticas...
+    <div *ngIf="cargando" class="notice-card">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <span>Calculando comparativa...</span>
     </div>
 
     <!-- ERRORES -->
-    <div
-      *ngIf="error"
-      class="error"
-      role="alert"
-    >
-      {{ error }}
+    <div *ngIf="error" class="error-card" role="alert">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <span>{{ error }}</span>
     </div>
 
     <!-- RESULTADOS -->
     <ng-container *ngIf="datos as d">
+      <!-- INDICADORES GENERALES EN CUADRICULA 2X2 RESPONSIVA -->
+      <div class="stats-grid">
+        <div class="stat-card sky-accent">
+          <span class="stat-label">Registros</span>
+          <span class="stat-val">{{ d.resumen.registros }}</span>
+        </div>
 
-      <!-- INDICADORES GENERALES -->
-      <div class="stats">
+        <div class="stat-card purple-accent">
+          <span class="stat-label">Promedio General</span>
+          <span class="stat-val purple-text">{{ d.resumen.promedioGeneral ?? '—' }}</span>
+        </div>
 
-        <ion-card>
-          <ion-card-content>
-            <small>Registros</small>
-            <strong>
-              {{ d.resumen.registros }}
-            </strong>
-          </ion-card-content>
-        </ion-card>
+        <div class="stat-card teal-accent">
+          <span class="stat-label">Asistencia</span>
+          <span class="stat-val teal-text">{{ porcentaje(d.resumen.asistenciaPonderada) }}</span>
+        </div>
 
-        <ion-card>
-          <ion-card-content>
-            <small>Promedio general</small>
-            <strong>
-              {{ d.resumen.promedioGeneral ?? '—' }}
-            </strong>
-          </ion-card-content>
-        </ion-card>
-
-        <ion-card>
-          <ion-card-content>
-            <small>Asistencia</small>
-            <strong>
-              {{ porcentaje(
-                d.resumen.asistenciaPonderada
-              ) }}
-            </strong>
-          </ion-card-content>
-        </ion-card>
-
-        <ion-card>
-          <ion-card-content>
-            <small>Entregas</small>
-            <strong>
-              {{ porcentaje(
-                d.resumen.tasaEntregas
-              ) }}
-            </strong>
-          </ion-card-content>
-        </ion-card>
-
+        <div class="stat-card amber-accent">
+          <span class="stat-label">Entregas</span>
+          <span class="stat-val amber-text">{{ porcentaje(d.resumen.tasaEntregas) }}</span>
+        </div>
       </div>
 
       <!-- GRAFICA DE BARRAS -->
-      <ion-card>
-
+      <ion-card class="chart-summary-card">
         <ion-card-header>
-          <ion-card-title>
-            Promedio por grupo
-          </ion-card-title>
+          <ion-card-title>Promedio por Grupo</ion-card-title>
         </ion-card-header>
-
         <ion-card-content>
+          <p *ngIf="!d.grupos.length" class="empty-text">No hay registros para estos filtros.</p>
 
-          <p *ngIf="!d.grupos.length">
-            No hay registros para estos filtros.
-          </p>
-
-          <div
-            class="bar-row"
-            *ngFor="let g of d.grupos"
-          >
-
-            <span class="group-name">
-              {{ g.grupo }}
-            </span>
-
+          <div class="bar-row" *ngFor="let g of d.grupos">
+            <span class="group-name" [title]="g.grupo">{{ g.grupo }}</span>
             <div class="track">
-              <div
-                class="fill"
-                [style.width.%]="ancho(g.promedio)"
-              >
-              </div>
+              <div class="fill" [style.width.%]="ancho(g.promedio)"></div>
             </div>
-
-            <b>
-              {{ g.promedio.toFixed(2) }}
-            </b>
-
+            <b class="group-score">{{ g.promedio.toFixed(1) }}</b>
           </div>
 
-          <small>
-            Escala de promedio: 0 a 10.
-          </small>
-
+          <small class="scale-note">Escala de promedio: 0 a 100.</small>
         </ion-card-content>
       </ion-card>
 
       <!-- TABLA COMPARATIVA -->
-      <ion-card>
-
+      <ion-card class="table-card">
         <ion-card-header>
-          <ion-card-title>
-            Detalle comparativo
-          </ion-card-title>
+          <ion-card-title>Detalle Comparativo</ion-card-title>
         </ion-card-header>
-
         <ion-card-content>
-
           <div class="table-scroll">
-
-            <table>
-
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Grupo</th>
@@ -265,48 +178,19 @@
                   <th>Entregas</th>
                 </tr>
               </thead>
-
               <tbody>
-
                 <tr *ngFor="let g of d.grupos">
-
-                  <td>
-                    {{ g.grupo }}
-                  </td>
-
-                  <td>
-                    {{ g.registros }}
-                  </td>
-
-                  <td>
-                    {{ g.promedio.toFixed(2) }}
-                  </td>
-
-                  <td>
-                    {{ porcentaje(
-                      g.asistenciaPonderada
-                    ) }}
-                  </td>
-
-                  <td>
-                    {{ porcentaje(
-                      g.tasaEntregas
-                    ) }}
-                  </td>
-
+                  <td class="bold-col">{{ g.grupo }}</td>
+                  <td>{{ g.registros }}</td>
+                  <td class="score-col">{{ g.promedio.toFixed(2) }}</td>
+                  <td>{{ porcentaje(g.asistenciaPonderada) }}</td>
+                  <td>{{ porcentaje(g.tasaEntregas) }}</td>
                 </tr>
-
               </tbody>
-
             </table>
-
           </div>
-
         </ion-card-content>
       </ion-card>
-
     </ng-container>
-
   </div>
-
 </ion-content>
